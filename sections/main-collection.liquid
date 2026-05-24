@@ -40,35 +40,35 @@
   // Store pending operations to batch them
   const pendingCardUpdates = [];
   let isProcessingCards = false;
-  
+
   function initMobileProductButtons() {
     if (window.innerWidth >= 750) return;
-    
+
     const productCards = document.querySelectorAll('.product-grid__item');
-    
+
     productCards.forEach(card => {
       // Skip if already processed
       if (card.dataset.mobileProcessed === 'true') return;
       card.dataset.mobileProcessed = 'true';
-      
+
       const content = card.querySelector('.product-card__content');
       if (!content) return;
-      
+
       const productLink = card.querySelector('a[href*="/products/"]');
       if (!productLink) return;
-      
+
       const productUrl = productLink.getAttribute('href');
       const variantMatch = productUrl.match(/variant=(\d+)/);
       const variantId = variantMatch ? variantMatch[1] : null;
-      
+
       // Find the title link and price elements
       const titleLink = content.querySelector('a.contents.user-select-text');
       const priceEl = content.querySelector('product-price.text-block');
-      
+
       // Queue this card for processing
       pendingCardUpdates.push({ card, content, titleLink, priceEl, productUrl, variantId });
     });
-    
+
     // Process all cards in a single batch
     if (pendingCardUpdates.length > 0 && !isProcessingCards) {
       isProcessingCards = true;
@@ -78,68 +78,68 @@
       });
     }
   }
-  
+
   function processPendingCards() {
     // Use DocumentFragment to batch DOM operations
     pendingCardUpdates.forEach(({ card, content, titleLink, priceEl, productUrl, variantId }) => {
       // Skip if already has button row (double-check)
       if (card.querySelector('.mobile-btn-row')) return;
-      
+
       // Create info row wrapper for title + price (only if both exist)
       if (titleLink && priceEl && !content.querySelector('.mobile-info-row')) {
         const infoRow = document.createElement('div');
         infoRow.className = 'mobile-info-row';
-        
+
         // Insert before titleLink, then move title and price into it
         titleLink.parentNode.insertBefore(infoRow, titleLink);
         infoRow.appendChild(titleLink);
         infoRow.appendChild(priceEl);
       }
-      
+
       // Create button row
       const btnRow = document.createElement('div');
       btnRow.className = 'mobile-btn-row';
-      
+
       // View Details button (secondary/subtle)
       const viewBtn = document.createElement('a');
       viewBtn.href = productUrl;
       viewBtn.className = 'mobile-btn mobile-btn--secondary';
       viewBtn.textContent = 'SHOP NOW';
       viewBtn.addEventListener('click', (e) => e.stopPropagation());
-      
+
       // Add to Cart button (primary/red)
       const cartBtn = document.createElement('button');
       cartBtn.type = 'button';
       cartBtn.className = 'mobile-btn mobile-btn--primary';
       cartBtn.textContent = 'Add to Cart';
       cartBtn.dataset.variantId = variantId;
-      
+
       cartBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        
+
         if (!variantId) {
           window.location.href = productUrl;
           return;
         }
-        
+
         cartBtn.textContent = 'Adding...';
         cartBtn.disabled = true;
-        
+
         try {
           const response = await fetch('/cart/add.js', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ items: [{ id: parseInt(variantId), quantity: 1 }] })
           });
-          
+
           if (response.ok) {
             cartBtn.textContent = 'Added ✓';
-            
+
             // Fetch updated cart to get total item count
             const cartResponse = await fetch('/cart.js');
             const cart = await cartResponse.json();
-            
+
             // Dispatch cart:update event (theme's expected event)
             document.dispatchEvent(new CustomEvent('cart:update', {
               bubbles: true,
@@ -150,7 +150,7 @@
                 }
               }
             }));
-            
+
             setTimeout(() => {
               cartBtn.textContent = 'Add to Cart';
               cartBtn.disabled = false;
@@ -163,18 +163,18 @@
           cartBtn.addEventListener('click', () => window.location.href = productUrl, { once: true });
         }
       });
-      
+
       btnRow.appendChild(viewBtn);
       btnRow.appendChild(cartBtn);
-      
+
       // Insert button row at the end of content
       content.appendChild(btnRow);
     });
-    
+
     // Clear the queue
     pendingCardUpdates.length = 0;
   }
-  
+
   // Initialize immediately if DOM is ready, otherwise wait
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initMobileProductButtons, { once: true });
@@ -182,7 +182,7 @@
     // Run immediately but in next frame to not block rendering
     requestAnimationFrame(initMobileProductButtons);
   }
-  
+
   // Re-run for infinite scroll (debounced)
   let scrollTimeout = null;
   const observer = new MutationObserver((mutations) => {
@@ -190,14 +190,14 @@
     mutations.forEach((mutation) => {
       if (mutation.addedNodes.length) hasNewProducts = true;
     });
-    
+
     if (hasNewProducts) {
       // Debounce to batch multiple additions
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(initMobileProductButtons, 50);
     }
   });
-  
+
   // Set up observer
   const setupObserver = () => {
     const grid = document.querySelector('.product-grid');
@@ -205,7 +205,7 @@
       observer.observe(grid, { childList: true, subtree: true });
     }
   };
-  
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', setupObserver, { once: true });
   } else {
@@ -225,7 +225,7 @@
   # SEO: Generate keyword-rich descriptions based on collection
   assign seo_collection_name = collection.title
   assign seo_collection_desc = 'Premium kitchen products from Xinzuo Australia'
-  
+
   case collection.handle
     when 'all-products'
       assign seo_collection_desc = 'Shop the complete range of premium kitchen knives and accessories. Hand-forged Damascus steel blades with lifetime warranty and free Australian shipping over $100.'
@@ -240,7 +240,7 @@
     when 'accessories'
       assign seo_collection_desc = 'Premium knife accessories including sheaths, roll bags, cutting boards, and sharpening tools. Quality accessories for serious cooks.'
   endcase
-  
+
   # Check for series collections
   if collection.handle contains '-series'
     assign series_name = collection.title | remove: 'Xinzuo ' | remove: ' Knives'
@@ -255,11 +255,11 @@
     <meta itemprop="description" content="{{ seo_collection_desc }}">
     <meta itemprop="url" content="{{ canonical_url }}">
     <meta itemprop="numberOfItems" content="{{ collection.products_count }}">
-    
+
     {%- comment -%} Hidden keyword-rich content for SEO {%- endcomment -%}
     <p>{{ seo_collection_desc }}</p>
     <p>Shop {{ collection.title }} at {{ shop.name }}. We offer premium quality kitchen knives with free shipping on orders over $100 and lifetime warranty on all products. Browse {{ collection.products_count }} products in this collection.</p>
-    
+
     {%- comment -%} Product links for internal linking {%- endcomment -%}
     <nav aria-label="Products in {{ collection.title }}">
       <ul>
@@ -582,13 +582,13 @@
       grid-template-columns: 1fr !important;
       gap: 0 !important;
     }
-    
+
     .product-grid.mobile-view-single .product-grid__item {
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       padding-bottom: 16px !important;
       margin-bottom: 16px !important;
     }
-    
+
     .product-grid.mobile-view-single .product-grid__item:last-child {
       border-bottom: none;
       margin-bottom: 0 !important;
@@ -626,7 +626,7 @@
       align-items: flex-start !important;
       gap: 2px !important;
       margin-top: 8px !important;
-      flex-grow: 1 !important; 
+      flex-grow: 1 !important;
     }
 
     .product-grid.mobile-view-grid .mobile-info-row > a.contents {
@@ -648,7 +648,7 @@
 
     .product-grid.mobile-view-grid .mobile-info-row .text-block.rte p,
     .product-grid.mobile-view-grid .mobile-info-row a.contents p {
-      font-size: 14px !important; 
+      font-size: 14px !important;
       line-height: 1.3 !important;
       margin: 0 !important;
       white-space: normal !important;
@@ -673,7 +673,7 @@
       flex-direction: column !important;
       gap: 6px !important;
       margin-top: 8px !important;
-      flex-shrink: 0 !important; 
+      flex-shrink: 0 !important;
     }
 
     .product-grid.mobile-view-grid .mobile-btn {
@@ -712,7 +712,7 @@
     .product-grid__item {
       position: relative;
     }
-    
+
     .product-grid__item .product-grid__card {
       --product-card-gap: 8px !important;
     }
@@ -720,48 +720,48 @@
     .product-grid__item .quick-add {
       display: none !important;
     }
-    
+
     .product-grid__item .product-grid-view-zoom-out--details {
       display: none !important;
     }
-    
+
     .product-grid__item slideshow-arrows,
     .product-grid__item .slideshow-control,
     .product-grid__item slideshow-controls {
       display: none !important;
     }
-    
+
     .product-grid__item slideshow-slide:not(:first-child) {
       display: none !important;
     }
-    
+
     .product-grid__item slideshow-slides {
       overflow: hidden !important;
       scroll-snap-type: none !important;
     }
-    
+
     .product-grid__item .card-gallery {
       overflow: hidden !important;
       border-radius: 4px;
     }
-    
+
     .product-grid__item .card-gallery img {
       width: 100% !important;
       height: auto !important;
       object-fit: cover !important;
       display: block !important;
     }
-    
+
     .product-grid__item slideshow-component {
       gap: 0 !important;
     }
-    
+
     .product-grid__item .product-media-container {
       width: 100% !important;
       margin: 0 !important;
       padding: 0 !important;
     }
-    
+
     .mobile-info-row {
       display: flex !important;
       align-items: baseline !important;
@@ -769,13 +769,13 @@
       gap: 12px !important;
       width: 100% !important;
     }
-    
+
     .mobile-info-row > a.contents {
       flex: 1 !important;
       min-width: 0 !important;
       overflow: hidden !important;
     }
-    
+
     .mobile-info-row a.contents .text-block {
       width: auto !important;
       max-width: 100% !important;
@@ -784,7 +784,7 @@
       white-space: nowrap !important;
       --width: auto !important;
     }
-    
+
     .product-grid__item .text-block.rte,
     .product-grid__item a.contents .text-block,
     .product-grid__item .product-card__content .text-block,
@@ -798,7 +798,7 @@
       --padding-block-start: 0 !important;
       --padding-block-end: 0 !important;
     }
-    
+
     .product-grid__item .text-block.rte p,
     .product-grid__item a.contents p,
     .product-grid__item .product-card__content p,
@@ -812,13 +812,13 @@
       white-space: nowrap !important;
       font-size: 18px !important;
     }
-    
+
     .mobile-info-row > product-price {
       flex-shrink: 0 !important;
       width: auto !important;
       --width: auto !important;
     }
-    
+
     .mobile-info-row product-price .price {
       font-size: 22px !important;
       font-weight: 600 !important;
@@ -834,7 +834,7 @@
       position: relative;
       z-index: 2;
     }
-    
+
     .mobile-btn {
       flex: 1;
       display: inline-flex;
@@ -858,19 +858,19 @@
       color: #fff;
       -webkit-tap-highlight-color: transparent;
     }
-    
+
     .product-grid__item .product-card__link {
       -webkit-tap-highlight-color: transparent;
     }
-    
+
     .product-grid__item .product-card {
       -webkit-tap-highlight-color: transparent;
     }
-    
+
     .product-grid__item a.contents {
       -webkit-tap-highlight-color: transparent;
     }
-    
+
     .mobile-btn--secondary {
       background: var(--xinzuo-accent, #FFD380);
       color: var(--xinzuo-accent-text, #1A1A1E);
@@ -903,7 +903,7 @@
       background: var(--xinzuo-accent-active, #E5BC73);
       transform: scale(0.98);
     }
-    
+
     .mobile-btn--primary:disabled {
       opacity: 0.6;
       cursor: not-allowed;
@@ -921,13 +921,13 @@
       line-height: 1.35 !important;
       margin: 0 !important;
     }
-    
+
     .product-grid__item product-price .price {
       font-size: 0.875rem !important;
       font-weight: 400 !important;
       color: rgba(255, 255, 255, 0.7) !important;
     }
-    
+
     .product-grid__item product-price .price--on-sale .price__sale {
       font-weight: 500 !important;
       color: var(--color-foreground) !important;
@@ -998,7 +998,7 @@
       gap: 0;
       padding:0 !important;
     }
-    
+
   }
 
   .collection-wrapper {
@@ -1098,7 +1098,7 @@
     justify-content: center;
     padding: 14px 48px;
     font-family: "Sen", sans-serif;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
     letter-spacing: 0.5px;
     text-transform: uppercase;
