@@ -1,46 +1,74 @@
 {% style %}
     .catalogue-{{ section.id }} {
-        padding: 80px 40px;
-        background: var(--xinzuo-black, #1A1A1E);
+        padding: 64px 40px 80px;
+        background: var(--xz-section-bg, #1A1A1E);
     }
 
     .catalogue-{{ section.id }} .catalogue-inner {
-        max-width: 1440px;
+        max-width: 1280px;
         margin: 0 auto;
     }
 
+    .catalogue-{{ section.id }} .catalogue-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        margin-bottom: 32px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(144, 144, 148, 0.2);
+    }
+
     .catalogue-{{ section.id }} .catalogue-heading {
-        font-family: "Sen";
+        font-family: "Sen", sans-serif;
         font-weight: 600;
-        font-size: 48px;
-        color: #fff;
-        text-align: center;
-        margin: 0 0 48px 0;
-        line-height: 130%;
+        font-size: 32px;
+        line-height: 1.25;
+        color: #f1f0f4;
+        margin: 0;
+    }
+
+    .catalogue-{{ section.id }} .catalogue-header__link {
+        font-family: "Sen", sans-serif;
+        font-weight: 600;
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #c9c9cc;
+        text-decoration: none;
+        margin-bottom: 8px;
+        transition: color 0.3s ease;
+    }
+
+    .catalogue-{{ section.id }} .catalogue-header__link:hover {
+        color: var(--xinzuo-gold, #D1AE6B);
     }
 
     .catalogue-{{ section.id }} .catalogue-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
+        grid-template-columns: 1fr;
+        gap: 24px;
     }
 
     .catalogue-{{ section.id }} .catalogue-card {
         position: relative;
         display: block;
         overflow: hidden;
-        aspect-ratio: 4 / 3;
+        min-height: 320px;
         text-decoration: none;
         color: inherit;
-        border-radius: 4px;
+        border-radius: 8px;
     }
 
     .catalogue-{{ section.id }} .catalogue-card__img {
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
-        transition: transform 0.5s ease;
+        transition: transform 0.7s ease-out;
     }
 
     .catalogue-{{ section.id }} .catalogue-card:hover .catalogue-card__img {
@@ -50,114 +78,209 @@
     .catalogue-{{ section.id }} .catalogue-card__overlay {
         position: absolute;
         inset: 0;
-        background: linear-gradient(0deg, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.05) 100%);
-        transition: background 0.3s ease;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.2) 45%, transparent 100%);
+        transition: background-color 0.5s ease;
     }
 
     .catalogue-{{ section.id }} .catalogue-card:hover .catalogue-card__overlay {
-        background: linear-gradient(0deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.05) 50%, rgba(0, 0, 0, 0) 100%);
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.35) 50%, transparent 100%);
     }
 
-    .catalogue-{{ section.id }} .catalogue-card__content {
+    .catalogue-{{ section.id }} .catalogue-card__body {
         position: absolute;
         bottom: 0;
         left: 0;
-        right: 0;
-        padding: 28px 24px;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 14px;
+        width: 100%;
+        padding: 32px;
+        z-index: 1;
+    }
+
+    .catalogue-{{ section.id }} .catalogue-card--large .catalogue-card__body {
+        padding: 32px 48px;
+    }
+
+    .catalogue-{{ section.id }} .catalogue-card__glass {
+        display: inline-block;
+        max-width: 24rem;
+        padding: 24px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .catalogue-{{ section.id }} .catalogue-card--large .catalogue-card__glass {
+        padding: 32px;
     }
 
     .catalogue-{{ section.id }} .catalogue-card__title {
-        font-family: "Sen";
-        font-weight: 700;
-        font-size: 22px;
-        color: #fff;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        margin: 0;
+        font-family: "Sen", sans-serif;
+        font-weight: 600;
+        color: #f1f0f4;
+        margin: 0 0 12px;
         line-height: 1.2;
     }
 
+    .catalogue-{{ section.id }} .catalogue-card--large .catalogue-card__title {
+        font-size: 28px;
+        margin-bottom: 16px;
+    }
+
+    .catalogue-{{ section.id }} .catalogue-card--small .catalogue-card__title {
+        font-size: 24px;
+        margin-bottom: 12px;
+    }
+
+    .catalogue-{{ section.id }} .catalogue-card__desc {
+        font-family: "Inter", Helvetica, Arial, sans-serif;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 1.5;
+        color: #c9c9cc;
+        margin: 0 0 24px;
+    }
+
+    .catalogue-{{ section.id }} .catalogue-card--small .catalogue-card__desc {
+        margin-bottom: 24px;
+    }
+
     .catalogue-{{ section.id }} .catalogue-card__btn {
-        display: inline-block;
-        padding: 8px 24px;
-        border: 1.5px solid rgba(255, 255, 255, 0.7);
-        background: transparent;
-        font-family: "Sen";
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-family: "Sen", sans-serif;
         font-weight: 600;
-        font-size: 13px;
-        color: #fff;
-        text-transform: capitalize;
-        letter-spacing: 0.3px;
-        cursor: pointer;
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
         transition: all 0.3s ease;
-        border-radius:4px;
+        border-radius: 4px;
     }
 
-    .catalogue-{{ section.id }} .catalogue-card:hover .catalogue-card__btn {
-        background: #fff;
-        color: #1A1A1E;
-        border-color: #fff;
+    .catalogue-{{ section.id }} .catalogue-card__btn--filled {
+        padding: 12px 32px;
+        background: #f1f0f4;
+        color: #2f3034;
+        border: none;
     }
 
-    @media screen and (max-width: 1025px) {
+    .catalogue-{{ section.id }} .catalogue-card:hover .catalogue-card__btn--filled {
+        background: var(--xinzuo-gold, #D1AE6B);
+        color: #1a1a1e;
+    }
+
+    .catalogue-{{ section.id }} .catalogue-card__btn--filled svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+    }
+
+    .catalogue-{{ section.id }} .catalogue-card__btn--outline {
+        padding: 8px 24px;
+        background: transparent;
+        color: #f1f0f4;
+        border: 1px solid rgba(241, 240, 244, 0.4);
+    }
+
+    .catalogue-{{ section.id }} .catalogue-card:hover .catalogue-card__btn--outline {
+        background: #f1f0f4;
+        color: #2f3034;
+        border-color: #f1f0f4;
+    }
+
+    .catalogue-{{ section.id }} .catalogue-card:active .catalogue-card__btn {
+        transform: scale(0.98);
+    }
+
+    @media screen and (min-width: 990px) {
+        .catalogue-{{ section.id }} .catalogue-grid {
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: 1fr 1fr;
+            height: 900px;
+            gap: 24px;
+        }
+
+        .catalogue-{{ section.id }} .catalogue-card {
+            min-height: 0;
+        }
+
+        .catalogue-{{ section.id }} .catalogue-card--large {
+            grid-column: span 7;
+        }
+
+        .catalogue-{{ section.id }} .catalogue-card--small {
+            grid-column: span 5;
+        }
+    }
+
+    @media screen and (max-width: 989px) {
         .catalogue-{{ section.id }} {
-            padding: 60px 24px;
+            padding: 48px 24px 60px;
         }
 
         .catalogue-{{ section.id }} .catalogue-heading {
-            font-size: 36px;
-            margin-bottom: 36px;
+            font-size: 28px;
         }
 
-        .catalogue-{{ section.id }} .catalogue-card__title {
-            font-size: 20px;
+        .catalogue-{{ section.id }} .catalogue-card--large .catalogue-card__body {
+            padding: 32px;
         }
     }
 
     @media screen and (max-width: 750px) {
         .catalogue-{{ section.id }} {
-            padding: 12px 20px;
+            padding: 40px 20px 48px;
         }
 
         .catalogue-{{ section.id }} .catalogue-heading {
-            font-size: 28px;
-            margin-bottom: 28px;
-        }
-
-        .catalogue-{{ section.id }} .catalogue-grid {
-            grid-template-columns: 1fr;
-            gap: 12px;
+            font-size: 24px;
         }
 
         .catalogue-{{ section.id }} .catalogue-card {
-            aspect-ratio: 16 / 10;
+            min-height: 280px;
         }
 
-        .catalogue-{{ section.id }} .catalogue-card__content {
-            padding: 20px 20px;
-            gap: 12px;
+        .catalogue-{{ section.id }} .catalogue-card__body {
+            padding: 24px;
         }
 
-        .catalogue-{{ section.id }} .catalogue-card__title {
-            font-size: 18px;
-            letter-spacing: 1px;
+        .catalogue-{{ section.id }} .catalogue-card__glass {
+            padding: 20px;
+            max-width: 100%;
         }
 
-        .catalogue-{{ section.id }} .catalogue-card__btn {
-            font-size: 12px;
-            padding: 7px 20px;
+        .catalogue-{{ section.id }} .catalogue-card--large .catalogue-card__title {
+            font-size: 24px;
+        }
+
+        .catalogue-{{ section.id }} .catalogue-card--small .catalogue-card__title {
+            font-size: 20px;
+        }
+
+        .catalogue-{{ section.id }} .catalogue-card__desc {
+            font-size: 15px;
+            margin-bottom: 20px;
         }
     }
 {% endstyle %}
 
 <section class="catalogue-{{ section.id }}">
     <div class="catalogue-inner">
-        {%- if section.settings.heading != blank -%}
-            <h2 class="catalogue-heading">{{ section.settings.heading }}</h2>
+        {%- if section.settings.heading != blank or section.settings.link_label != blank -%}
+            <div class="catalogue-header">
+                {%- if section.settings.heading != blank -%}
+                    <h2 class="catalogue-heading">{{ section.settings.heading }}</h2>
+                {%- endif -%}
+                {%- if section.settings.link_label != blank -%}
+                    <a
+                        class="catalogue-header__link"
+                        href="{{ section.settings.link_url | default: '/collections/all' }}"
+                    >
+                        {{ section.settings.link_label }}
+                    </a>
+                {%- endif -%}
+            </div>
         {%- endif -%}
 
         <div class="catalogue-grid">
@@ -167,27 +290,51 @@
                     assign card_url = collection.url | default: '#'
                     assign card_title = block.settings.title | default: collection.title | default: 'Category'
                     assign card_image = block.settings.image | default: collection.image | default: collection.products.first.featured_image
-                    assign btn_text = block.settings.button_text | default: 'View More'
+                    assign btn_text = block.settings.button_text | default: 'Explore Collection'
+                    assign card_desc = block.settings.description
+
+                    assign layout_mod = forloop.index | modulo: 4
+                    if layout_mod == 1 or layout_mod == 0
+                        assign card_size = 'large'
+                    else
+                        assign card_size = 'small'
+                    endif
                 -%}
-                <a href="{{ card_url }}" class="catalogue-card" {{ block.shopify_attributes }}>
+                <a
+                    href="{{ card_url }}"
+                    class="catalogue-card catalogue-card--{{ card_size }}"
+                    {{ block.shopify_attributes }}
+                >
                     {%- if card_image != blank -%}
                         <img
                             class="catalogue-card__img"
-                            src="{{ card_image | image_url: width: 800 }}"
-                            srcset="{{ card_image | image_url: width: 400 }} 400w, {{ card_image | image_url: width: 600 }} 600w, {{ card_image | image_url: width: 800 }} 800w, {{ card_image | image_url: width: 1200 }} 1200w"
-                            sizes="(max-width: 750px) 100vw, 50vw"
-                            width="800"
-                            height="600"
+                            src="{{ card_image | image_url: width: 1200 }}"
+                            srcset="{{ card_image | image_url: width: 600 }} 600w, {{ card_image | image_url: width: 900 }} 900w, {{ card_image | image_url: width: 1200 }} 1200w, {{ card_image | image_url: width: 1600 }} 1600w"
+                            sizes="(max-width: 989px) 100vw, 58vw"
+                            width="1200"
+                            height="900"
                             loading="lazy"
                             alt="{{ card_image.alt | default: card_title | escape }}"
                         >
                     {%- else -%}
                         {{ 'collection-1' | placeholder_svg_tag: 'catalogue-card__img' }}
                     {%- endif -%}
-                    <div class="catalogue-card__overlay"></div>
-                    <div class="catalogue-card__content">
-                        <h3 class="catalogue-card__title">{{ card_title }}</h3>
-                        <span class="catalogue-card__btn">{{ btn_text }}</span>
+                    <div class="catalogue-card__overlay" aria-hidden="true"></div>
+                    <div class="catalogue-card__body">
+                        <div class="catalogue-card__glass">
+                            <h3 class="catalogue-card__title">{{ card_title }}</h3>
+                            {%- if card_desc != blank -%}
+                                <p class="catalogue-card__desc">{{ card_desc }}</p>
+                            {%- endif -%}
+                            <span class="catalogue-card__btn{% if card_size == 'large' %} catalogue-card__btn--filled{% else %} catalogue-card__btn--outline{% endif %}">
+                                {{ btn_text }}
+                                {%- if card_size == 'large' -%}
+                                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                        <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/>
+                                    </svg>
+                                {%- endif -%}
+                            </span>
+                        </div>
                     </div>
                 </a>
             {%- endfor -%}
@@ -204,6 +351,17 @@
             "id": "heading",
             "label": "Heading",
             "default": "Shop by Category"
+        },
+        {
+            "type": "text",
+            "id": "link_label",
+            "label": "Header link label",
+            "default": "View Full Inventory →"
+        },
+        {
+            "type": "url",
+            "id": "link_url",
+            "label": "Header link URL"
         }
     ],
     "blocks": [
@@ -221,7 +379,7 @@
                     "type": "image_picker",
                     "id": "image",
                     "label": "Custom Image",
-                    "info": "Overrides collection image. Recommended: 800x600px lifestyle photo."
+                    "info": "Overrides collection image. Recommended: 1200×900px lifestyle photo."
                 },
                 {
                     "type": "text",
@@ -230,10 +388,16 @@
                     "info": "Overrides collection title"
                 },
                 {
+                    "type": "textarea",
+                    "id": "description",
+                    "label": "Description",
+                    "info": "Short copy shown in the glass panel on the card"
+                },
+                {
                     "type": "text",
                     "id": "button_text",
                     "label": "Button Text",
-                    "default": "View More"
+                    "default": "Explore Collection"
                 }
             ]
         }
