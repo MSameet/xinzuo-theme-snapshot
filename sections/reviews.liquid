@@ -7,6 +7,8 @@
     background-color: var(--xz-section-bg, #1A1A1E);
     padding: 80px 0 64px;
     position: relative;
+    max-height: 100vh;
+    overflow: hidden;
   }
 
   .section-{{ section.id }} .home-reviews {
@@ -17,7 +19,7 @@
   }
 
   .section-{{ section.id }} .home-reviews h2 {
-    color: #fff;
+    color: var(--xinzuo-white, #fffff);
     max-width: 900px;
     font-size: 48px;
     text-align: center;
@@ -26,17 +28,17 @@
   }
 
   .section-{{ section.id }} .home-reviews h2 strong {
-    color: var(--xinzuo-accent, #FFD380);
+    color: var(--xinzuo-gold, #D1AE6B);
     font-weight: 600;
   }
 
   .section-{{ section.id }} .menu-swiper {
     position: relative;
+    z-index: 1;
     visibility: hidden;
     opacity: 0;
     transition: opacity 0.6s ease;
     overflow-x: hidden;
-    margin-top: 30vw;
   }
 
   .section-{{ section.id }} .menu-swiper.swiper-initialized {
@@ -45,15 +47,15 @@
   }
 
   .section-{{ section.id }} .menu-swiper .swiper-slide {
-    opacity: 0.5;
+    opacity: 1;
     transform: scale(0.8);
     transition: all 0.3s ease;
     cursor: grab;
   }
 
   .section-{{ section.id }} .menu-swiper .swiper-slide.swiper-slide-active {
-    opacity: 0.95;
     transform: scale(1);
+    opacity:1;
     cursor: pointer;
   }
 
@@ -75,24 +77,29 @@
     overflow: hidden;
     opacity: 0.95;
     margin: 0;
-    background-color: var(--xz-card-bg, #292A33);
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
     padding: 48px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 96px;
+    gap: 50px;
   }
 
   .section-{{ section.id }} figure.menu-card h2 {
     font-size: 22px;
-    margin-bottom: 24px;
-    color: white;
+    margin-bottom: 8px;
+    color: var(--xinzuo-gold, #D1AE6B);
   }
 
-  .section-{{ section.id }} figure.menu-card h5 {
+  .section-{{ section.id }} figure.menu-card .menu-card-top p {
     font-weight: 400;
-    font-size: 18px;
-    color: #c9c9cc;
+    font-size: 28px;
+    line-height: 1.55;
+    color: #f1f0f4;
     margin: 0;
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -104,6 +111,10 @@
   .section-{{ section.id }} figure.menu-card .menu-card-bottom {
     width: 100%;
   }
+  .section-{{ section.id }} figure.menu-card .menu-card-bottom p {
+    margin-top:0px;
+    font-size:14px;
+  }
 
   .section-{{ section.id }} figure.menu-card .menu-card-bottom * {
     text-align: end;
@@ -112,7 +123,7 @@
   .section-{{ section.id }} figure.menu-card span {
     font-weight: 400;
     font-size: 18px;
-    color: white;
+    color: var(--xinzuo-gold, #D1AE6B);
     display: block;
   }
 
@@ -130,9 +141,12 @@
 
   .section-{{ section.id }} img {
     position: absolute;
+    top: 0;
+    left: 0;
     margin-top: -80px;
     width: 100%;
-    min-height: 700px;
+    height: 100vh;
+    max-height: 100vh;
     object-fit: cover;
   }
 
@@ -141,11 +155,6 @@
     margin: auto;
   }
 
-  @media screen and (max-width: 1000px) {
-    .section-{{ section.id }} .menu-swiper {
-      margin-top: 350px;
-    }
-  }
 
   @media screen and (max-width: 750px) {
     .section-{{ section.id }} > div {
@@ -157,7 +166,6 @@
     }
 
     .section-{{ section.id }} figure.menu-card {
-      height:408px;
       width: 100%;
     }
 
@@ -171,18 +179,18 @@
 
     .section-{{ section.id }} figure.menu-card {
       padding: 24px;
-      gap: 80px;
-      background: var(--xz-card-bg, #292A33);
+      gap: 40px;
     }
 
     .section-{{ section.id }} figure.menu-card h2 {
-      font-size: 19px;
-      margin-bottom: 12px;
-      color: #fff;
+      font-size: 20px;
+      margin-bottom: 8px;
+      color: var(--xinzuo-gold, #D1AE6B);
     }
 
-    .section-{{ section.id }} figure.menu-card h5 {
-      font-size: 18px;
+    .section-{{ section.id }} figure.menu-card .menu-card-top p {
+      font-size: 24px;
+      line-height: 1.5;
     }
 
     .section-{{ section.id }} .menu-card-bottom p {
@@ -207,7 +215,6 @@
         loading="lazy"
         decoding="async"
         alt="Customer reviews background - Xinzuo knives"
-        style="width: 100%; height: auto; min-height: 700px; object-fit: cover;"
       >
     {%- endif -%}
     <svg xmlns="http://www.w3.org/2000/svg" width="88" height="14" viewBox="0 0 88 14" fill="none">
@@ -252,19 +259,19 @@
 <script>
   (function() {
     'use strict';
-    
+
     var initialized = false;
-    
+
     function initMenuSwipers() {
       if (initialized) return;
       if (typeof Swiper === 'undefined') {
         setTimeout(initMenuSwipers, 200);
         return;
       }
-      
+
       var sliders = document.querySelectorAll('.section-{{ section.id }} .menu-swiper');
       if (!sliders.length) return;
-      
+
       initialized = true;
 
       sliders.forEach(function(sliderEl) {
@@ -282,7 +289,7 @@
         });
       });
     }
-    
+
     // Performance: Use Intersection Observer to init only when visible
     function observeSection() {
       var section = document.querySelector('.section-{{ section.id }} .menu-swiper');
@@ -292,7 +299,7 @@
         }
         return;
       }
-      
+
       if ('IntersectionObserver' in window) {
         var observer = new IntersectionObserver(function(entries) {
           entries.forEach(function(entry) {
@@ -306,13 +313,13 @@
             }
           });
         }, { rootMargin: '300px' });
-        
+
         observer.observe(section);
       } else {
         initMenuSwipers();
       }
     }
-    
+
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', observeSection);
     } else {
