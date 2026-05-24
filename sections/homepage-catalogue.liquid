@@ -223,8 +223,62 @@
             font-size: 28px;
         }
 
+        .catalogue-{{ section.id }} .catalogue-card {
+            min-height: 280px;
+        }
+
+        .catalogue-{{ section.id }} .catalogue-card__body,
         .catalogue-{{ section.id }} .catalogue-card--large .catalogue-card__body {
-            padding: 32px;
+            padding: 0;
+        }
+
+        .catalogue-{{ section.id }} .catalogue-card__glass,
+        .catalogue-{{ section.id }} .catalogue-card--large .catalogue-card__glass {
+            padding: 10px;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .catalogue-{{ section.id }} .catalogue-card__title {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+
+        .catalogue-{{ section.id }} .catalogue-card__desc {
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+
+        .catalogue-{{ section.id }} .catalogue-card--large .catalogue-card__btn--filled {
+            padding: 8px 24px;
+            background: transparent;
+            color: #f1f0f4;
+            border: 1px solid rgba(241, 240, 244, 0.4);
+        }
+
+        .catalogue-{{ section.id }} .catalogue-card--large:hover .catalogue-card__btn--filled {
+            background: #f1f0f4;
+            color: #2f3034;
+            border-color: #f1f0f4;
+        }
+
+        .catalogue-{{ section.id }} .catalogue-card--large .catalogue-card__btn--filled svg {
+            display: none;
+        }
+
+        .catalogue-{{ section.id }} .catalogue-card__desc--hide-mobile {
+            display: none;
+        }
+    }
+
+    @media screen and (min-width: 751px) and (max-width: 989px) {
+        .catalogue-{{ section.id }} .catalogue-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .catalogue-{{ section.id }} .catalogue-card--large,
+        .catalogue-{{ section.id }} .catalogue-card--small {
+            grid-column: auto;
         }
     }
 
@@ -236,33 +290,8 @@
         .catalogue-{{ section.id }} .catalogue-heading {
             font-size: 24px;
         }
-
-        .catalogue-{{ section.id }} .catalogue-card {
-            min-height: 280px;
-        }
-
-        .catalogue-{{ section.id }} .catalogue-card__body {
-            padding: 24px;
-        }
-
-        .catalogue-{{ section.id }} .catalogue-card__glass {
-            padding: 20px;
-            max-width: 100%;
-        }
-
-        .catalogue-{{ section.id }} .catalogue-card--large .catalogue-card__title {
-            font-size: 24px;
-        }
-
-        .catalogue-{{ section.id }} .catalogue-card--small .catalogue-card__title {
-            font-size: 20px;
-        }
-
-        .catalogue-{{ section.id }} .catalogue-card__desc {
-            font-size: 15px;
-            margin-bottom: 20px;
-        }
     }
+
 {% endstyle %}
 
 <section class="catalogue-{{ section.id }}">
@@ -310,7 +339,7 @@
                             class="catalogue-card__img"
                             src="{{ card_image | image_url: width: 1200 }}"
                             srcset="{{ card_image | image_url: width: 600 }} 600w, {{ card_image | image_url: width: 900 }} 900w, {{ card_image | image_url: width: 1200 }} 1200w, {{ card_image | image_url: width: 1600 }} 1600w"
-                            sizes="(max-width: 989px) 100vw, 58vw"
+                            sizes="(max-width: 750px) 100vw, (max-width: 989px) 50vw, 58vw"
                             width="1200"
                             height="900"
                             loading="lazy"
@@ -324,7 +353,9 @@
                         <div class="catalogue-card__glass">
                             <h3 class="catalogue-card__title">{{ card_title }}</h3>
                             {%- if card_desc != blank -%}
-                                <p class="catalogue-card__desc">{{ card_desc }}</p>
+                                <p class="catalogue-card__desc{% if block.settings.hide_description_mobile %} catalogue-card__desc--hide-mobile{% endif %}">
+                                    {{ card_desc }}
+                                </p>
                             {%- endif -%}
                             <span class="catalogue-card__btn{% if card_size == 'large' %} catalogue-card__btn--filled{% else %} catalogue-card__btn--outline{% endif %}">
                                 {{ btn_text }}
@@ -392,6 +423,12 @@
                     "id": "description",
                     "label": "Description",
                     "info": "Short copy shown in the glass panel on the card"
+                },
+                {
+                    "type": "checkbox",
+                    "id": "hide_description_mobile",
+                    "label": "Hide description on mobile",
+                    "default": false
                 },
                 {
                     "type": "text",

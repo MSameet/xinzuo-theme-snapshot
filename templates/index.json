@@ -115,6 +115,8 @@
           "settings": {
             "collection": "knives",
             "title": "Knives",
+            "description": "Individually forged blades designed for absolute balance and surgical sharpness.",
+            "hide_description_mobile": true,
             "button_text": "View More"
           }
         },
@@ -123,6 +125,8 @@
           "settings": {
             "collection": "accessories",
             "title": "Accessories",
+            "description": "The essential companions for the master of the kitchen.",
+            "hide_description_mobile": true,
             "button_text": "View More"
           }
         },
@@ -131,6 +135,8 @@
           "settings": {
             "collection": "knife-sets",
             "title": "Knife sets",
+            "description": "Complete your arsenal with curated sets for any culinary challenge.",
+            "hide_description_mobile": true,
             "button_text": "View More"
           }
         },
@@ -139,6 +145,8 @@
           "settings": {
             "collection": "knife-holders",
             "title": "knife holders",
+            "description": "Protect your investment with magnetic strips and handcrafted blocks.",
+            "hide_description_mobile": true,
             "button_text": "View More"
           }
         }
@@ -151,7 +159,9 @@
       ],
       "name": "Homepage Catalogue",
       "settings": {
-        "heading": "Shop by Category"
+        "heading": "Shop by Category",
+        "link_label": "View Full Inventory →",
+        "link_url": ""
       }
     },
     "home_products_3iCime": {
