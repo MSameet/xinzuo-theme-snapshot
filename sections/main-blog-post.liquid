@@ -37,6 +37,56 @@
     </div>
     {%- content_for 'block', id: 'blog-post-content', type: '_blog-post-content' %}
 
+    {%- if blog.articles_count > 1 -%}
+      {%- assign related_limit = 4 -%}
+      {%- assign related_shown = 0 -%}
+      <aside class="blog-post-related" aria-labelledby="blog-post-related-heading">
+        <h2 id="blog-post-related-heading" class="blog-post-related__heading">More from {{ blog.title }}</h2>
+        <div class="hg-grid">
+          {%- for art in blog.articles -%}
+            {%- if related_shown >= related_limit -%}
+              {%- break -%}
+            {%- endif -%}
+            {%- if art.id == article.id or art.published_at == blank -%}
+              {%- continue -%}
+            {%- endif -%}
+            {%- assign related_shown = related_shown | plus: 1 -%}
+            <a href="{{ art.url }}" class="hg-card">
+              {%- if art.image -%}
+                <img
+                  class="hg-card-img"
+                  src="{{ art.image | image_url: width: 600, height: 320, crop: 'center' }}"
+                  alt="{{ art.title | escape }}"
+                  loading="lazy"
+                  width="600"
+                  height="320"
+                >
+              {%- endif -%}
+              <div class="hg-card-body">
+                <div class="hg-card-meta">
+                  <time datetime="{{ art.published_at | date: '%Y-%m-%d' }}">
+                    {{ art.published_at | date: '%B %d, %Y' }}
+                  </time>
+                  {%- if art.content != blank -%}
+                    {%- assign card_word_count = art.content | strip_html | split: ' ' | size -%}
+                    {%- assign card_reading_time = card_word_count | plus: 199 | divided_by: 200 | at_least: 1 -%}
+                    <span class="hg-card-read-time">{{ card_reading_time }} min read</span>
+                  {%- endif -%}
+                </div>
+                <h3 class="hg-card-title">{{ art.title }}</h3>
+                {%- if art.excerpt != blank -%}
+                  <p class="hg-card-excerpt">{{ art.excerpt | strip_html | truncate: 120 }}</p>
+                {%- elsif art.content != blank -%}
+                  <p class="hg-card-excerpt">{{ art.content | strip_html | truncate: 120 }}</p>
+                {%- endif -%}
+                <span class="hg-card-cta">Read Guide &rarr;</span>
+              </div>
+            </a>
+          {%- endfor -%}
+        </div>
+      </aside>
+    {%- endif -%}
+
     {% if blog.comments_enabled? %}
       <div class="blog-post-comments-container">
         <h2 class="h3">{{- 'blogs.article.comments_heading' | t: count: article.comments_count -}}</h2>
@@ -78,7 +128,7 @@
 {%- liquid
   assign article_description = article.excerpt_or_content | strip_html | strip_newlines | truncate: 160
   assign article_image = article.image | image_url: width: 1200, height: 630
-  
+
   # Calculate reading time for schema
   assign word_count = article.content | strip_html | split: ' ' | size
   assign reading_time = word_count | plus: 199 | divided_by: 200 | at_least: 1
@@ -274,6 +324,130 @@
   .blog-post-comments-pagination .current,
   .blog-post-comments-pagination a:hover {
     border-bottom: 1px solid var(--color-foreground);
+  }
+
+  /* Related guides — matches homepage-guides cards */
+  .blog-post-related {
+    width: 100%;
+    max-width: 1440px;
+    margin: 48px auto 0;
+    padding-top: 48px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .blog-post-related__heading {
+    font-family: "Sen", sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 24px;
+    text-align: center;
+  }
+
+  .blog-post-related .hg-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  .blog-post-related .hg-card {
+    background: var(--xz-card-bg, #292A33);
+    border-radius: 4px;
+    overflow: hidden;
+    text-decoration: none;
+    transition: transform 0.2s ease;
+    border-top: 2px solid var(--xinzuo-gold, #D1AE6B);
+  }
+
+  .blog-post-related .hg-card:hover {
+    transform: translateY(-2px);
+    border-top: 2px solid var(--xinzuo-gold, #D1AE6B);
+  }
+
+  .blog-post-related .hg-card-img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .blog-post-related .hg-card-body {
+    padding: 16px 20px 20px;
+  }
+
+  .blog-post-related .hg-card-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    color: #9a9aa0;
+    margin-bottom: 10px;
+  }
+
+  .blog-post-related .hg-card-meta time {
+    font-weight: 600;
+    color: var(--xinzuo-gold, #D1AE6B);
+  }
+
+  .blog-post-related .hg-card-read-time {
+    position: relative;
+    padding-left: 10px;
+  }
+
+  .blog-post-related .hg-card-read-time::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: rgba(255, 255, 255, 0.25);
+  }
+
+  .blog-post-related h3.hg-card-title {
+    font-family: "Sen", sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 8px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .blog-post-related .hg-card-excerpt {
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #9a9aa0;
+    margin: 0 0 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .blog-post-related .hg-card-cta {
+    font-size: 13px;
+    font-weight: 600;
+    color: #c9c9cc;
+    letter-spacing: 0.5px;
+  }
+
+  @media screen and (max-width: 750px) {
+    .blog-post-related .hg-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .blog-post-related .hg-card-img {
+      height: 120px;
+    }
+
+    .blog-post-related__heading {
+      font-size: 22px;
+    }
   }
 {% endstylesheet %}
 

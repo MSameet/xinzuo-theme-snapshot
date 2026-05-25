@@ -325,7 +325,8 @@
         "heading": "Verified Reviews",
         "subheading": "",
         "show_summary": true,
-        "summary_text": "Based on 500+ reviews"
+        "summary_text": "Based on 500+ reviews",
+        "enable_loop": true
       }
     },
     "reviews_UMDUhc": {
@@ -374,7 +375,11 @@
       "type": "homepage-guides",
       "settings": {
         "heading": "Knife Knowledge",
-        "subtitle": "Expert guides to help you choose, use, and care for your knives"
+        "subtitle": "Expert guides to help you choose, use, and care for your knives",
+        "blog": "news",
+        "article_tag": "all",
+        "article_tag_custom": "",
+        "articles_to_show": 4
       }
     },
     "section_er3F6d": {
