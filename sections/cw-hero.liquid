@@ -227,11 +227,12 @@
 
    @media screen and (max-width: 480px) {
       .section-{{ section.id }} .hero-banner {
-        height: auto;
+        height: 40vh;
       }
 
       .section-{{ section.id }} .hero-banner-img img {
           object-fit: contain;
+          object-position:bottom
       }
    }
 {% endstyle %}
@@ -301,32 +302,38 @@
       </div>
       <div class="hero-banner-img">
         {%- comment -%} Performance: Use picture element to load only the needed image per device {%- endcomment -%}
-        <picture>
-          {%- comment -%} Mobile: High quality for retina screens {%- endcomment -%}
-          <source
-            media="(max-width: 480px)"
-            srcset="{{ section.settings.mobile_img | image_url: width: 480 }} 480w, {{ section.settings.mobile_img | image_url: width: 640 }} 640w, {{ section.settings.mobile_img | image_url: width: 750 }} 750w"
-            sizes="100vw"
-          >
-          {%- comment -%} Tablet: Medium screens {%- endcomment -%}
-          <source
-            media="(max-width: 850px)"
-            srcset="{{ section.settings.middle_desktop_img | image_url: width: 800 }} 800w, {{ section.settings.middle_desktop_img | image_url: width: 1000 }} 1000w, {{ section.settings.middle_desktop_img | image_url: width: 1200 }} 1200w"
-            sizes="100vw"
-          >
-          {%- comment -%} Desktop: High quality for large screens {%- endcomment -%}
-          <img
-            srcset="{{ section.settings.desktop_img | image_url: width: 1200 }} 1200w, {{ section.settings.desktop_img | image_url: width: 1600 }} 1600w, {{ section.settings.desktop_img | image_url: width: 1920 }} 1920w, {{ section.settings.desktop_img | image_url: width: 2560 }} 2560w"
-            sizes="100vw"
-            src="{{ section.settings.desktop_img | image_url: width: 1920 }}"
-            alt="XINZUO Premium Kitchen Knives - Japanese & Damascus Steel"
-            width="1920"
-            height="1080"
-            fetchpriority="high"
-            decoding="sync"
-            style="width:100%;height:100%"
-          >
-        </picture>
+        {%- if section.settings.desktop_img -%}
+          <picture>
+            {%- comment -%} Mobile: High quality for retina screens {%- endcomment -%}
+            {%- if section.settings.mobile_img -%}
+              <source
+                media="(max-width: 480px)"
+                srcset="{{ section.settings.mobile_img | image_url: width: 480 }} 480w, {{ section.settings.mobile_img | image_url: width: 640 }} 640w, {{ section.settings.mobile_img | image_url: width: 750 }} 750w"
+                sizes="100vw"
+              >
+            {%- endif -%}
+            {%- comment -%} Tablet: Medium screens {%- endcomment -%}
+            {%- if section.settings.middle_desktop_img -%}
+              <source
+                media="(max-width: 850px)"
+                srcset="{{ section.settings.middle_desktop_img | image_url: width: 800 }} 800w, {{ section.settings.middle_desktop_img | image_url: width: 1000 }} 1000w, {{ section.settings.middle_desktop_img | image_url: width: 1200 }} 1200w"
+                sizes="100vw"
+              >
+            {%- endif -%}
+            {%- comment -%} Desktop: High quality for large screens {%- endcomment -%}
+            <img
+              srcset="{{ section.settings.desktop_img | image_url: width: 1200 }} 1200w, {{ section.settings.desktop_img | image_url: width: 1600 }} 1600w, {{ section.settings.desktop_img | image_url: width: 1920 }} 1920w, {{ section.settings.desktop_img | image_url: width: 2560 }} 2560w"
+              sizes="100vw"
+              src="{{ section.settings.desktop_img | image_url: width: 1920 }}"
+              alt="XINZUO Premium Kitchen Knives - Japanese & Damascus Steel"
+              width="1920"
+              height="1080"
+              fetchpriority="high"
+              decoding="sync"
+              style="width:100%;height:100%"
+            >
+          </picture>
+        {%- endif -%}
       </div>
     </div>
   </div>

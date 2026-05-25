@@ -6,7 +6,7 @@
   @param {string} [data_header_drawer_type] - The type of header drawer to render
   @param {object} [block] - The block that can be used to provide settings
   @param {object} [section] - The section that can be used to provide settings
-  
+
   @example
   {% render 'header-drawer', linklist: section.settings.menu, class: 'header-drawer--mobile' %}
 {%- enddoc -%}
@@ -860,7 +860,6 @@
             {% endif %}
           {%- endfor -%}
           {% comment %} Separator + Reviews & Contact Us {% endcomment %}
-          <li class="header-category-li header-drawer-separator" aria-hidden="true"></li>
           <li class="header-category-li">
             <a href="/pages/reviews" class="header-category header-category--link">
               <span>Reviews</span>
