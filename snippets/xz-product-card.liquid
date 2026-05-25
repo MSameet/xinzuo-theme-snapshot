@@ -25,6 +25,10 @@
   @param {object} product - Shopify product object
   @param {object} [variant_to_link] - Variant whose URL the card should link
                                       to. Defaults to selected_or_first_available_variant.
+  @param {string} [card_id] - Optional unique card instance ID
+  @param {string} [card_loading] - Optional image loading strategy
+  @param {string} [card_fetchpriority] - Optional image fetch priority
+  @param {string} [card_sizes] - Optional responsive image sizes
 {%- enddoc -%}
 
 {%- liquid
@@ -347,29 +351,43 @@
     endif
     assign card_image = card_metafield_image
   endif
+
+  assign card_instance_id = card_id | default: product.id
+  assign image_loading = card_loading | default: 'lazy'
+  assign image_fetchpriority = card_fetchpriority | default: 'auto'
+  assign image_sizes = card_sizes | default: '(max-width: 750px) 100vw, (max-width: 1025px) 50vw, 33vw'
+
+  # ─── REVIEW RATING ─────────────────────────────────────────────────────
+  assign jdgm_badge = product.metafields.judgeme.badge
+  assign review_count = 0
+  assign avg_rating = 0
+  if jdgm_badge != blank
+    assign badge_parts = jdgm_badge | split: "data-number-of-reviews='"
+    if badge_parts.size > 1
+      assign review_count = badge_parts[1] | split: "'" | first | plus: 0
+    endif
+    assign rating_parts = jdgm_badge | split: "data-average-rating='"
+    if rating_parts.size > 1
+      assign avg_rating = rating_parts[1] | split: "'" | first | times: 100 | round | divided_by: 100.0
+    endif
+  endif
+
+  # ─── ATC STATE ───────────────────────────────────────────────────────
+  # Single available variant → real AJAX add-to-cart button.
+  # Multiple variants → link to PDP so the customer can pick options.
+  # Unavailable → disabled state.
+  assign atc_url = variant_to_link.url | default: product.url
+  assign atc_sold_out = false
+  assign atc_multi = false
+  unless product.available
+    assign atc_sold_out = true
+  endunless
+  if product.has_only_default_variant == false and product.variants.size > 1
+    assign atc_multi = true
+  endif
 -%}
 
-<div class="xz-product-card" data-product-id="{{ product.id }}">
-  {%- comment -%}
-    Markup mirrors the Webflow spec at shop-collections.webflow.io exactly:
-      .xz-product-card                     (flex column, justify-content: space-between)
-      ├─ .xz-card-link                     (stretched link, z-1)
-      ├─ .xz-card-info-wrp                 (image + descr stack)
-      │   ├─ .xz-card-img-wrap             (1:1 image)
-      │   └─ .xz-card-descr                (16px padding all)
-      │       ├─ .xz-card-pill-wrap        (margin-bottom 8/4)
-      │       │   └─ .xz-card-pill-text    (white bg, 2px 6px padding)
-      │       ├─ h3.xz-card-title          (Sen 700 14/12)
-      │       ├─ .xz-card-subttl-wrap      (margin-top 2)
-      │       │   └─ .xz-card-series       (Sen 400 12 upper, ink-80)
-      │       └─ .xz-card-price            (margin-top 4, flex row)
-      │           ├─ .xz-price-old         (red strikethrough, optional)
-      │           └─ .xz-price-new
-      ├─ .xz-card-btn-wrap                 (padding 0 16 16 — no top)
-      │   └─ a.xz-card-atc                 (gold 40px, 4px radius)
-      └─ .xz-card-promo-wrap               (absolute top-left 16/16, optional)
-  {%- endcomment -%}
-
+<div class="xz-product-card xz-product-card--home" data-product-id="{{ product.id }}">
   <a
     href="{{ variant_to_link.url | default: product.url }}"
     class="xz-card-link"
@@ -382,88 +400,115 @@
     <div class="xz-card-img-wrap">
       {%- if card_image -%}
         <img
-          src="{{ card_image | image_url: width: 600 }}"
+          src="{{ card_image | image_url: width: 500 }}"
           srcset="
             {{ card_image | image_url: width: 300 }} 300w,
-            {{ card_image | image_url: width: 450 }} 450w,
-            {{ card_image | image_url: width: 600 }} 600w,
-            {{ card_image | image_url: width: 800 }} 800w
+            {{ card_image | image_url: width: 500 }} 500w,
+            {{ card_image | image_url: width: 700 }} 700w
           "
-          sizes="(max-width: 749px) 45vw, (max-width: 1199px) 30vw, 22vw"
+          sizes="{{ image_sizes }}"
           alt="{{ product.title | escape }}"
-          loading="lazy"
-          width="600"
-          height="600"
+          loading="{{ image_loading }}"
+          fetchpriority="{{ image_fetchpriority }}"
+          decoding="async"
+          width="500"
+          height="500"
         >
+      {%- endif -%}
+
+      <div class="xz-card-btn-wrap">
+        {%- if atc_sold_out -%}
+          <span class="xz-card-atc xz-card-atc--soldout xz-card-atc--icon" aria-disabled="true">
+            <span class="visually-hidden">Sold out</span>
+            <svg aria-hidden="true" width="19" height="19" viewBox="0 0 20 20" fill="none">
+              <path d="M6.25 6.75h10.08l-1.08 5.77a1.4 1.4 0 0 1-1.38 1.15H7.83a1.4 1.4 0 0 1-1.38-1.17L5.3 4.58H3.75" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8.15 16.35h.02M13.85 16.35h.02" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            </svg>
+          </span>
+        {%- elsif atc_multi -%}
+          <a href="{{ atc_url }}" class="xz-card-atc xz-card-atc--choose xz-card-atc--icon" aria-label="Choose options for {{ product.title | escape }}">
+            <span class="visually-hidden">Choose options</span>
+            <svg aria-hidden="true" width="19" height="19" viewBox="0 0 20 20" fill="none">
+              <path d="M6.25 6.75h10.08l-1.08 5.77a1.4 1.4 0 0 1-1.38 1.15H7.83a1.4 1.4 0 0 1-1.38-1.17L5.3 4.58H3.75" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M11 8.35v3.3M9.35 10h3.3" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/>
+              <path d="M8.15 16.35h.02M13.85 16.35h.02" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            </svg>
+          </a>
+        {%- else -%}
+          <button
+            type="button"
+            class="xz-card-atc xz-card-atc--add xz-card-atc--icon"
+            data-variant-id="{{ variant_to_link.id }}"
+            data-product-url="{{ atc_url }}"
+            aria-label="Add {{ product.title | escape }} to cart"
+          >
+            <span class="visually-hidden">Add to cart</span>
+            <svg aria-hidden="true" width="19" height="19" viewBox="0 0 20 20" fill="none">
+              <path d="M6.25 6.75h10.08l-1.08 5.77a1.4 1.4 0 0 1-1.38 1.15H7.83a1.4 1.4 0 0 1-1.38-1.17L5.3 4.58H3.75" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M11 8.35v3.3M9.35 10h3.3" stroke="currentColor" stroke-width="1.45" stroke-linecap="round"/>
+              <path d="M8.15 16.35h.02M13.85 16.35h.02" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        {%- endif -%}
+      </div>
+
+      {%- if product.available == false -%}
+        <span class="xz-card-sold">Sold Out</span>
+      {%- endif -%}
+
+      {%- if show_new or on_sale -%}
+        <div class="xz-card-promo-wrap">
+          {%- if show_new -%}
+            <span class="xz-card-promo-text xz-card-promo-text--new">New</span>
+          {%- else -%}
+            <span class="xz-card-promo-text">{{ discount_pct }}% OFF</span>
+          {%- endif -%}
+        </div>
       {%- endif -%}
     </div>
 
     <div class="xz-card-descr">
-      {%- if pill != '' -%}
-        <div class="xz-card-pill-wrap">
-          <span class="xz-card-pill-text">{{ pill }}</span>
-        </div>
-      {%- endif -%}
+      <div
+        class="xz-rating"
+        aria-label="{{ avg_rating }} out of 5 stars{% if review_count > 0 %}, {{ review_count }} reviews{% endif %}"
+      >
+        <span class="xz-rating__stars">
+          {%- assign rating_x10 = avg_rating | times: 10 | round -%}
+          {%- for i in (1..5) -%}
+            {%- assign threshold_full = i | times: 10 -%}
+            {%- assign threshold_half = i | minus: 1 | times: 10 | plus: 3 -%}
+            {%- if rating_x10 >= threshold_full -%}
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 1l1.76 3.57 3.94.57-2.85 2.78.67 3.93L7 9.93l-3.52 1.92.67-3.93L1.3 5.14l3.94-.57L7 1z" fill="#D1AE6B" stroke="#D1AE6B" stroke-width="0.5"/>
+              </svg>
+            {%- elsif rating_x10 >= threshold_half -%}
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="half-{{ card_instance_id }}-{{ i }}"><stop offset="50%" stop-color="#D1AE6B"/><stop offset="50%" stop-color="transparent"/></linearGradient></defs><path d="M7 1l1.76 3.57 3.94.57-2.85 2.78.67 3.93L7 9.93l-3.52 1.92.67-3.93L1.3 5.14l3.94-.57L7 1z" fill="url(#half-{{ card_instance_id }}-{{ i }})" stroke="#D1AE6B" stroke-width="0.5"/>
+              </svg>
+            {%- else -%}
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 1l1.76 3.57 3.94.57-2.85 2.78.67 3.93L7 9.93l-3.52 1.92.67-3.93L1.3 5.14l3.94-.57L7 1z" fill="none" stroke="#D1AE6B" stroke-width="0.5"/>
+              </svg>
+            {%- endif -%}
+          {%- endfor -%}
+        </span>
+        {%- if review_count > 0 -%}
+          <span class="xz-rating__text">({{ review_count }})</span>
+        {%- else -%}
+          <span class="xz-rating__text">(New)</span>
+        {%- endif -%}
+      </div>
 
-      <h3 class="xz-card-title">{{ card_title }}</h3>
-
-      {%- if series != '' -%}
-        <div class="xz-card-subttl-wrap">
-          <span class="xz-card-series">{{ series }}</span>
-        </div>
-      {%- endif -%}
+      <h3 class="xz-card-title">{{ product.title }}</h3>
 
       <div class="xz-card-price">
+        <span class="xz-price-new">{{ product.price | money }}</span>
         {%- if on_sale -%}
           <span class="xz-price-old">{{ product.compare_at_price | money }}</span>
         {%- endif -%}
-        <span class="xz-price-new">{{ product.price | money }}</span>
       </div>
     </div>
   </div>
-
-  {%- liquid
-    # ─── ATC STATE ───────────────────────────────────────────────────────
-    # Single available variant → real AJAX add-to-cart button.
-    # Multiple variants → link to PDP so the customer can pick options.
-    # Unavailable → disabled "Sold out" state.
-    assign atc_url = variant_to_link.url | default: product.url
-    assign atc_sold_out = false
-    assign atc_multi = false
-    unless product.available
-      assign atc_sold_out = true
-    endunless
-    if product.has_only_default_variant == false and product.variants.size > 1
-      assign atc_multi = true
-    endif
-  -%}
-
-  <div class="xz-card-btn-wrap">
-    {%- if atc_sold_out -%}
-      <span class="xz-card-atc xz-card-atc--soldout" aria-disabled="true">Sold out</span>
-    {%- elsif atc_multi -%}
-      <a href="{{ atc_url }}" class="xz-card-atc xz-card-atc--choose">Choose options</a>
-    {%- else -%}
-      <button
-        type="button"
-        class="xz-card-atc xz-card-atc--add"
-        data-variant-id="{{ variant_to_link.id }}"
-        data-product-url="{{ atc_url }}"
-        data-default-text="+ Add to cart"
-        aria-label="Add {{ product.title | escape }} to cart"
-      >+ Add to cart</button>
-    {%- endif -%}
-  </div>
-
-  {%- if show_new or on_sale -%}
-    <div class="xz-card-promo-wrap">
-      {%- if show_new -%}
-        <span class="xz-card-promo-text xz-card-promo-text--new">NEW</span>
-      {%- else -%}
-        <span class="xz-card-promo-text">{{ discount_pct }}% OFF</span>
-      {%- endif -%}
-    </div>
-  {%- endif -%}
 </div>
 
 <script>
@@ -482,7 +527,9 @@
 
       var variantId = parseInt(btn.dataset.variantId, 10);
       var productUrl = btn.dataset.productUrl;
-      var defaultText = btn.dataset.defaultText || btn.textContent;
+      var defaultHtml = btn.dataset.defaultHtml || btn.innerHTML;
+      var defaultLabel = btn.getAttribute('aria-label');
+      btn.dataset.defaultHtml = defaultHtml;
 
       if (!variantId) {
         if (productUrl) window.location.href = productUrl;
@@ -491,7 +538,8 @@
 
       btn.classList.add('is-loading');
       btn.disabled = true;
-      btn.textContent = 'Adding…';
+      btn.setAttribute('aria-label', 'Adding to cart');
+      btn.innerHTML = '<span class="visually-hidden">Adding to cart</span><span aria-hidden="true">...</span>';
 
       fetch('/cart/add.js', {
         method: 'POST',
@@ -508,7 +556,8 @@
         .then(function (cart) {
           btn.classList.remove('is-loading');
           btn.classList.add('is-added');
-          btn.textContent = 'Added ✓';
+          btn.setAttribute('aria-label', 'Added to cart');
+          btn.innerHTML = '<span class="visually-hidden">Added to cart</span><span aria-hidden="true">✓</span>';
 
           document.dispatchEvent(
             new CustomEvent('cart:update', {
@@ -520,13 +569,15 @@
           setTimeout(function () {
             btn.classList.remove('is-added');
             btn.disabled = false;
-            btn.textContent = defaultText;
+            btn.innerHTML = defaultHtml;
+            if (defaultLabel) btn.setAttribute('aria-label', defaultLabel);
           }, 1800);
         })
         .catch(function () {
           btn.classList.remove('is-loading');
           btn.disabled = false;
-          btn.textContent = defaultText;
+          btn.innerHTML = defaultHtml;
+          if (defaultLabel) btn.setAttribute('aria-label', defaultLabel);
           if (productUrl) window.location.href = productUrl;
         });
     });

@@ -45,6 +45,18 @@
       gap: 32px;
   }
 
+  .section-{{ section.id }} .home-grid product-card,
+  .section-{{ section.id }} .home-grid product-card-link {
+      display: block;
+      width: 100%;
+      height: 100%;
+  }
+
+  .section-{{ section.id }} .home-grid .product-card {
+      display: grid;
+      height: 100%;
+  }
+
   .section-{{ section.id }} .product-item {
      display: flex;
      flex-direction: column;
@@ -354,105 +366,23 @@
           assign visible_limit = 9
         -%}
         {%- for product in products_to_show limit: visible_limit -%}
-          <a class="product-item" href="{{ product.url }}">
-            <div class="product-img">
-              {%- if product.featured_image != blank -%}
-                {%- liquid
-                  # Performance: Eager load first 3 images, lazy load rest
-                  assign img_loading = 'lazy'
-                  assign img_priority = 'auto'
-                  if forloop.index <= 3
-                    assign img_loading = 'eager'
-                    assign img_priority = 'high'
-                  endif
-                -%}
-                <img
-                  srcset="{{ product.featured_image | image_url: width: 300 }} 300w, {{ product.featured_image | image_url: width: 500 }} 500w, {{ product.featured_image | image_url: width: 700 }} 700w"
-                  sizes="(max-width: 750px) 100vw, (max-width: 1025px) 50vw, 33vw"
-                  src="{{ product.featured_image | image_url: width: 500 }}"
-                  width="500"
-                  height="500"
-                  alt="{{ product.title | escape }} - {{ product.vendor | escape }}"
-                  loading="{{ img_loading }}"
-                  fetchpriority="{{ img_priority }}"
-                  decoding="async"
-                >
-              {%- endif -%}
-              {%- if product.available == false -%}
-                <span class="sold">Sold Out</span>
-              {%- endif -%}
-              {%- if product.tags contains 'New' -%}
-                <span class="price-off">New</span>
-              {%- elsif product.compare_at_price and product.compare_at_price > product.price -%}
-                {%- assign discount = product.compare_at_price | minus: product.price -%}
-                {%- assign percent = discount | times: 100 | divided_by: product.compare_at_price -%}
-                <span class="price-off">{{ percent }}% OFF</span>
-              {%- endif -%}
-            </div>
-            {%- comment -%}
-              Custom star rating — reads judge.me metafield data directly.
-              Renders filled/half/empty stars without relying on judge.me JS.
-            {%- endcomment -%}
-            {%- assign jdgm_badge = product.metafields.judgeme.badge -%}
-            {%- assign review_count = 0 -%}
-            {%- assign avg_rating = 0 -%}
-            {%- if jdgm_badge != blank -%}
-              {%- assign badge_parts = jdgm_badge | split: "data-number-of-reviews='" -%}
-              {%- if badge_parts.size > 1 -%}
-                {%- assign review_count = badge_parts[1] | split: "'" | first | plus: 0 -%}
-              {%- endif -%}
-              {%- assign rating_parts = jdgm_badge | split: "data-average-rating='" -%}
-              {%- if rating_parts.size > 1 -%}
-                {%- assign avg_rating = rating_parts[1]
-                  | split: "'"
-                  | first
-                  | times: 100
-                  | round
-                  | divided_by: 100.0
-                -%}
-              {%- endif -%}
-            {%- endif -%}
-            <div
-              class="xz-rating"
-              aria-label="{{ avg_rating }} out of 5 stars{% if review_count > 0 %}, {{ review_count }} reviews{% endif %}"
-            >
-              <span class="xz-rating__stars">
-                {%- assign rating_x10 = avg_rating | times: 10 | round -%}
-                {%- for i in (1..5) -%}
-                  {%- assign threshold_full = i | times: 10 -%}
-                  {%- assign threshold_half = i | minus: 1 | times: 10 | plus: 3 -%}
-                  {%- if rating_x10 >= threshold_full -%}
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M7 1l1.76 3.57 3.94.57-2.85 2.78.67 3.93L7 9.93l-3.52 1.92.67-3.93L1.3 5.14l3.94-.57L7 1z" fill="#D1AE6B" stroke="#D1AE6B" stroke-width="0.5"/>
-                    </svg>
-                  {%- elsif rating_x10 >= threshold_half -%}
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <defs><linearGradient id="half-{{ product.id }}-{{ i }}"><stop offset="50%" stop-color="#D1AE6B"/><stop offset="50%" stop-color="transparent"/></linearGradient></defs><path d="M7 1l1.76 3.57 3.94.57-2.85 2.78.67 3.93L7 9.93l-3.52 1.92.67-3.93L1.3 5.14l3.94-.57L7 1z" fill="url(#half-{{ product.id }}-{{ i }})" stroke="#D1AE6B" stroke-width="0.5"/>
-                    </svg>
-                  {%- else -%}
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M7 1l1.76 3.57 3.94.57-2.85 2.78.67 3.93L7 9.93l-3.52 1.92.67-3.93L1.3 5.14l3.94-.57L7 1z" fill="none" stroke="#D1AE6B" stroke-width="0.5"/>
-                    </svg>
-                  {%- endif -%}
-                {%- endfor -%}
-              </span>
-              {%- if review_count > 0 -%}
-                <span class="xz-rating__text">({{ review_count }})</span>
-              {%- else -%}
-                <span class="xz-rating__text">(New)</span>
-              {%- endif -%}
-            </div>
-            <h3>{{ product.title }}</h3>
-
-            <div class="collection-price">
-              <span class="prices">
-                <span class="sale-price">{{ product.price | money }}</span>
-                {%- if product.compare_at_price and product.compare_at_price > product.price -%}
-                  <span class="compare-price">{{ product.compare_at_price | money }}</span>
-                {%- endif -%}
-              </span>
-            </div>
-          </a>
+          {%- liquid
+            # Performance: Eager load first 3 images, lazy load rest.
+            assign img_loading = 'lazy'
+            assign img_priority = 'auto'
+            if forloop.index <= 3
+              assign img_loading = 'eager'
+              assign img_priority = 'high'
+            endif
+            assign product_card_id = 'home-products-' | append: section.id | append: '-' | append: product.id | append: '-' | append: forloop.index
+          -%}
+          {% render 'product-card',
+            product: product,
+            card_id: product_card_id,
+            card_loading: img_loading,
+            card_fetchpriority: img_priority,
+            card_sizes: '(max-width: 750px) 100vw, (max-width: 1025px) 50vw, 33vw'
+          %}
         {%- endfor -%}
       </div>
       <a id="load-more" href="/collections/all-products" data-page="1">

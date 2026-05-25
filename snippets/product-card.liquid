@@ -4,9 +4,13 @@
   The product object is null or when placeholders are rendered.
 
   @param {object} product - The product object
-  @param {object} children - The children of the product card
+  @param {object} [children] - The children of the product card
   @param {object} [block] - The block object
   @param {number} [product_card_gap] - The gap between the product card children (overrides block settings)
+  @param {string} [card_id] - Optional unique ID when rendering outside a product-card block
+  @param {string} [card_loading] - Optional image loading strategy
+  @param {string} [card_fetchpriority] - Optional image fetch priority
+  @param {string} [card_sizes] - Optional responsive image sizes
 {%- enddoc -%}
 
 {% assign block_settings = block.settings %}
@@ -31,7 +35,7 @@
     assign has_mobile_quick_add = true
   endif
 
-  assign product_card_id = 'product-card-link-' | append: block.id | append: '-' | append: product.id
+  assign product_card_dom_id = card_id | default: block.id | default: product.id
   assign product_card_gap_value = product_card_gap | default: block_settings.product_card_gap
 
   # Logic to determine which variant URL to use (matching swatch selection logic)
@@ -98,7 +102,7 @@
     class="product-card"
     data-product-id="{{ product.id }}"
     data-product-variants-size="{{ product.variants.size }}"
-    id="product-card-{{ block.id }}"
+    id="product-card-{{ product_card_dom_id }}"
     data-product-transition="{{ settings.transition_to_main_product }}"
     {{ block.shopify_attributes }}
     {% if no_swatch_selected %}
@@ -109,16 +113,22 @@
     {% endif %}
   >
     {%- comment -%}
-      Xinzuo Style Guide v1.0 card: replaces the theme-editor block composition
-      ({{ children }}) with a fixed Style-Guide-accurate layout. Theme-editor
-      blocks for the card body are intentionally bypassed — the new card has a
-      canonical structure (image, NEW/promo badge, white pill, title, series,
-      price, gold ATC) that doesn't need per-section configuration.
+      Xinzuo product card: replaces the theme-editor block composition
+      ({{ children }}) with a fixed layout shared by collection grids and
+      home-products (image, promo/sold states, rating, title, price, and
+      image-corner quick add).
       To revert, restore the original <a class="product-card__link"> + .product-card__content
       block from git history and remove this {% render %} call.
     {%- endcomment -%}
     {% unless onboarding %}
-      {% render 'xz-product-card', product: product, variant_to_link: variant_to_link %}
+      {% render 'xz-product-card',
+        product: product,
+        variant_to_link: variant_to_link,
+        card_id: product_card_dom_id,
+        card_loading: card_loading,
+        card_fetchpriority: card_fetchpriority,
+        card_sizes: card_sizes
+      %}
     {% endunless %}
   </product-card>
 {%- endcapture -%}
