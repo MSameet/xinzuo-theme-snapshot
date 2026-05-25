@@ -393,10 +393,35 @@
       </svg>
     </button>
 
-    <div class="best-reviews-swiper swiper-container">
+    {%- liquid
+      assign review_count = section.blocks.size
+      assign loop_enabled = true
+      if section.settings.enable_loop == false
+        assign loop_enabled = false
+      endif
+      assign clone_passes = 1
+      if loop_enabled and review_count > 0
+        assign min_loop_slides = 10
+        assign clone_passes = 2
+        assign needed_passes = min_loop_slides | divided_by: review_count
+        assign slides_remainder = min_loop_slides | modulo: review_count
+        if slides_remainder > 0
+          assign needed_passes = needed_passes | plus: 1
+        endif
+        if needed_passes > clone_passes
+          assign clone_passes = needed_passes
+        endif
+      endif
+    -%}
+
+    <div
+      class="best-reviews-swiper swiper-container"
+      data-enable-loop="{% if loop_enabled and review_count > 0 %}true{% else %}false{% endif %}"
+    >
       <div class="swiper-wrapper">
-      {%- for block in section.blocks -%}
-        <div class="swiper-slide" {{ block.shopify_attributes }}>
+      {%- for pass in (1..clone_passes) -%}
+        {%- for block in section.blocks -%}
+        <div class="swiper-slide"{% if pass == 1 %} {{ block.shopify_attributes }}{% endif %}>
           <div class="review-card">
             <div class="review-card__stars">
               {%- assign rating = block.settings.rating | default: 5 -%}
@@ -456,6 +481,7 @@
             </div>
           </div>
         </div>
+        {%- endfor -%}
       {%- endfor -%}
       </div>
     </div>
@@ -486,6 +512,18 @@
 
     var initialized = false;
     var sectionId = '{{ section.id }}';
+    var originalSlideCount = {{ review_count }};
+
+    function updatePagination(swiper, enableLoop) {
+      if (originalSlideCount <= 1) return;
+      var pagEl = swiper.pagination.el;
+      if (!pagEl) return;
+      var activeIndex = enableLoop ? swiper.realIndex % originalSlideCount : swiper.activeIndex;
+      var bullets = pagEl.querySelectorAll('.swiper-pagination-bullet');
+      bullets.forEach(function(bullet, i) {
+        bullet.classList.toggle('swiper-pagination-bullet-active', i === activeIndex);
+      });
+    }
 
     function initSwiper() {
       if (initialized) return;
@@ -497,6 +535,8 @@
       var swiperEl = document.querySelector('.section-' + sectionId + ' .best-reviews-swiper');
       if (!swiperEl || swiperEl.classList.contains('swiper-initialized')) return;
 
+      var enableLoop = swiperEl.dataset.enableLoop === 'true';
+
       initialized = true;
 
       new Swiper(swiperEl, {
@@ -504,15 +544,41 @@
         spaceBetween: 16,
         slidesOffsetBefore: 16,
         grabCursor: true,
-        loop: false,
-        freeMode: true,
+        loop: enableLoop,
+        loopAdditionalSlides: enableLoop ? 5 : 0,
         navigation: {
           prevEl: '.section-' + sectionId + ' .best-reviews__arrow--prev',
           nextEl: '.section-' + sectionId + ' .best-reviews__arrow--next',
         },
         pagination: {
           el: '.section-' + sectionId + ' .best-reviews__pagination',
-          clickable: true,
+          clickable: false,
+        },
+        on: {
+          init: function(swiper) {
+            if (originalSlideCount <= 1) return;
+            var pagEl = swiper.pagination.el;
+            if (!pagEl) return;
+            pagEl.innerHTML = '';
+            for (var i = 0; i < originalSlideCount; i++) {
+              (function(idx) {
+                var bullet = document.createElement('span');
+                bullet.className = 'swiper-pagination-bullet';
+                bullet.addEventListener('click', function() {
+                  if (enableLoop) {
+                    swiper.slideToLoop(idx);
+                  } else {
+                    swiper.slideTo(idx);
+                  }
+                });
+                pagEl.appendChild(bullet);
+              })(i);
+            }
+            updatePagination(swiper, enableLoop);
+          },
+          slideChange: function(swiper) {
+            updatePagination(swiper, enableLoop);
+          }
         },
         breakpoints: {
           750: {
@@ -599,6 +665,12 @@
       "id": "summary_text",
       "label": "Summary text",
       "default": "Based on 500+ reviews"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_loop",
+      "label": "Enable infinite loop",
+      "default": true
     }
   ],
   "blocks": [

@@ -127,18 +127,6 @@
     display: block;
   }
 
-  .section-{{ section.id }} .menu-swiper .swiper-pagination {
-    position: static;
-    padding-top: 64px;
-    font-size: 16px;
-    color: white;
-    margin: 0;
-  }
-
-  .section-{{ section.id }} .menu-swiper .swiper-pagination span {
-    background: #fff;
-  }
-
   .section-{{ section.id }} img {
     position: absolute;
     top: 0;
@@ -171,10 +159,6 @@
 
     .section-{{ section.id }} .home-reviews {
       margin-bottom: 48px;
-    }
-
-    .section-{{ section.id }} .menu-swiper .swiper-pagination {
-      padding-top: 32px;
     }
 
     .section-{{ section.id }} figure.menu-card {
@@ -217,7 +201,7 @@
         alt="Customer reviews background - Xinzuo knives"
       >
     {%- endif -%}
-    <svg xmlns="http://www.w3.org/2000/svg" width="88" height="14" viewBox="0 0 88 14" fill="none">
+    <svg xmlns="http://www.w3.org/2000/svg" width="160" height="26" viewBox="0 0 88 14" fill="none">
       <g clip-path="url(#clip0_6018_26809)">
         <path d="M3.872 3.38086L5.06 5.76476L7.744 6.15485L5.808 8.01863L6.292 10.6192L3.872 9.40563L1.496 10.6192L1.936 8.01863L0 6.15485L2.684 5.76476L3.872 3.38086Z" fill="white"/>
         <path d="M23.936 3.38086L25.124 5.76476L27.808 6.15485L25.872 8.01863L26.356 10.6192L23.936 9.40563L21.56 10.6192L22 8.01863L20.064 6.15485L22.748 5.76476L23.936 3.38086Z" fill="white"/>
@@ -251,7 +235,6 @@
           </div>
         {% endfor %}
       </div>
-      <div class="swiper-pagination"></div>
     </div>
   </div>
 </section>
@@ -282,10 +265,6 @@
           centeredSlides: true,
           loop: false,
           grabCursor: true,
-          pagination: {
-            el: '.section-{{ section.id }} .swiper-pagination',
-            clickable: true,
-          },
         });
       });
     }
