@@ -113,15 +113,21 @@
                 <h2>{{ block.settings.title }}</h2>
                 <div class="product-info5-blocks">
                     <div class="product-info5-block">
-                        <img src="{{ block.settings.image1 | image_url: width: 800 }}" alt="{{ block.settings.content1 | strip_html | truncate: 80 | default: 'Product feature' | escape }}">
+                        {% if block.settings.image1 != blank %}
+                            <img src="{{ block.settings.image1 | image_url: width: 800 }}" alt="{{ block.settings.content1 | strip_html | truncate: 80 | default: 'Product feature' | escape }}">
+                        {% endif %}
                         <span>{{ block.settings.content1 }}</span>
                     </div>
                     <div class="product-info5-block">
-                        <img src="{{ block.settings.image2 | image_url: width: 800 }}" alt="{{ block.settings.content2 | strip_html | truncate: 80 | default: 'Product feature' | escape }}">
+                        {% if block.settings.image2 != blank %}
+                            <img src="{{ block.settings.image2 | image_url: width: 800 }}" alt="{{ block.settings.content2 | strip_html | truncate: 80 | default: 'Product feature' | escape }}">
+                        {% endif %}
                         <span>{{ block.settings.content2 }}</span>
                     </div>
                     <div class="product-info5-block">
-                        <img src="{{ block.settings.image3 | image_url: width: 800 }}" alt="{{ block.settings.content3 | strip_html | truncate: 80 | default: 'Product feature' | escape }}">
+                        {% if block.settings.image3 != blank %}
+                            <img src="{{ block.settings.image3 | image_url: width: 800 }}" alt="{{ block.settings.content3 | strip_html | truncate: 80 | default: 'Product feature' | escape }}">
+                        {% endif %}
                         <span>{{ block.settings.content3 }}</span>
                     </div>
                 </div>

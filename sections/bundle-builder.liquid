@@ -13,6 +13,7 @@
   assign min_items = section.settings.min_items | default: 3
   assign max_items = section.settings.max_items | default: 8
   assign series_blocks = section.blocks | where: "type", "series_collection"
+  assign search_blocks = section.blocks | where: "type", "search_bar"
   assign has_series = false
   if series_blocks.size > 0
     assign has_series = true
@@ -83,6 +84,46 @@
         Select at least {{ min_items }} items to unlock your discount (15%)
       </div>
     </div>
+
+    {%- comment -%} Search (theme editor block, above series tabs) {%- endcomment -%}
+    {%- if has_series and search_blocks.size > 0 -%}
+      {%- for block in search_blocks -%}
+        <div class="bundle-builder__search" ref="searchWrapper" {{ block.shopify_attributes }}>
+          <label class="visually-hidden" for="bundle-search-{{ section.id }}">
+            {{ block.settings.label | default: 'Search products' }}
+          </label>
+          <div class="bundle-builder__search-field">
+            <svg class="bundle-builder__search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="search"
+              id="bundle-search-{{ section.id }}"
+              class="bundle-builder__search-input"
+              ref="searchInput"
+              placeholder="{{ block.settings.placeholder | default: 'Search products...' }}"
+              autocomplete="off"
+              enterkeyhint="search"
+              on:input="/handleSearchInput"
+            >
+            <button
+              type="button"
+              class="bundle-builder__search-clear"
+              ref="searchClear"
+              on:click="/handleSearchClear"
+              aria-label="Clear search"
+              hidden
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      {%- endfor -%}
+    {%- endif -%}
 
     {%- comment -%} Series Tabs {%- endcomment -%}
     {%- if has_series -%}
@@ -176,6 +217,19 @@
 
                   {%- assign variant = product.selected_or_first_available_variant -%}
                   {%- assign global_index = global_index | plus: 1 -%}
+                  {%- liquid
+                    assign bundle_search_text = product.title | append: ' ' | append: product.product_type | append: ' ' | append: product.vendor | append: ' ' | append: product_series | downcase
+
+                    assign img_loading = 'lazy'
+                    assign img_priority = 'auto'
+                    if global_index <= 8
+                      assign img_loading = 'eager'
+                      assign img_priority = 'high'
+                    endif
+
+                    assign bundle_card_sizes = '(max-width: 500px) 50vw, (max-width: 750px) 50vw, (max-width: 1300px) 33vw, 25vw'
+                    assign bundle_card_id = 'bundle-' | append: section.id | append: '-' | append: product.id
+                  -%}
                   <div
                     class="bundle-card"
                     ref="cards[]"
@@ -190,56 +244,24 @@
                     data-title="{{ product.title | escape }}"
                     data-image="{{ product.featured_image | image_url: width: 100 }}"
                     data-series="{{ product_series }}"
+                    data-search-text="{{ bundle_search_text | escape }}"
                     on:click="/handleCardClick"
                   >
-                    {%- comment -%} Checkbox Overlay {%- endcomment -%}
-                    <div class="bundle-card__checkbox">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
+                    <div class="bundle-card__select" aria-hidden="true">
+                      <span class="bundle-card__checkbox">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      </span>
                     </div>
-
-                    {%- comment -%} Product Image {%- endcomment -%}
-                    <div class="bundle-card__image">
-                      {%- if product.featured_image != blank -%}
-                        {%- liquid
-                          assign img_loading = 'lazy'
-                          assign img_priority = 'auto'
-                          if global_index <= 8
-                            assign img_loading = 'eager'
-                            assign img_priority = 'high'
-                          endif
-                        -%}
-                        <img
-                          srcset="{{ product.featured_image | image_url: width: 300 }} 300w, {{ product.featured_image | image_url: width: 500 }} 500w, {{ product.featured_image | image_url: width: 700 }} 700w"
-                          sizes="(max-width: 500px) 50vw, (max-width: 750px) 50vw, (max-width: 1300px) 33vw, 25vw"
-                          src="{{ product.featured_image | image_url: width: 500 }}"
-                          width="500"
-                          height="500"
-                          alt="{{ product.title | escape }}"
-                          loading="{{ img_loading }}"
-                          fetchpriority="{{ img_priority }}"
-                          decoding="async"
-                        >
-                      {%- endif -%}
-
-                      {%- if product.compare_at_price and product.compare_at_price > product.price -%}
-                        {%- assign discount = product.compare_at_price | minus: product.price -%}
-                        {%- assign percent = discount | times: 100 | divided_by: product.compare_at_price -%}
-                        <span class="bundle-card__badge">{{ percent }}% OFF</span>
-                      {%- endif -%}
-                    </div>
-
-                    {%- comment -%} Product Info {%- endcomment -%}
-                    <div class="bundle-card__info">
-                      <h3 class="bundle-card__title">{{ product.title }}</h3>
-                      <div class="bundle-card__price">
-                        <span class="bundle-card__current-price">{{ variant.price | money }}</span>
-                        {%- if variant.compare_at_price and variant.compare_at_price > variant.price -%}
-                          <span class="bundle-card__compare-price">{{ variant.compare_at_price | money }}</span>
-                        {%- endif -%}
-                      </div>
-                    </div>
+                    {% render 'xz-product-card',
+                      product: product,
+                      variant_to_link: variant,
+                      card_id: bundle_card_id,
+                      card_loading: img_loading,
+                      card_fetchpriority: img_priority,
+                      card_sizes: bundle_card_sizes
+                    %}
                   </div>
 
                   {%- comment -%} Mark this product as rendered {%- endcomment -%}
@@ -249,6 +271,7 @@
             {%- endif -%}
           {%- endfor -%}
         </div>
+        <p class="bundle-builder__search-empty" ref="searchEmpty" hidden>No products match your search.</p>
       {%- else -%}
         <div class="bundle-builder__empty" style="text-align: center; padding: 60px 20px; color: #c9c9cc; font-family: 'Albert Sans', sans-serif; font-size: 18px;">
           <p>No products found in the selected collections.</p>
@@ -413,6 +436,25 @@
   ],
   "blocks": [
     {
+      "type": "search_bar",
+      "name": "Search bar",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Accessible label",
+          "default": "Search products"
+        },
+        {
+          "type": "text",
+          "id": "placeholder",
+          "label": "Placeholder",
+          "default": "Search knives by name, series, or type..."
+        }
+      ]
+    },
+    {
       "type": "series_collection",
       "name": "Series / Collection Tab",
       "settings": [
@@ -473,6 +515,9 @@
     {
       "name": "Bundle Builder",
       "blocks": [
+        {
+          "type": "search_bar"
+        },
         {
           "type": "series_collection",
           "settings": {

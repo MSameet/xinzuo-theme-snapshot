@@ -81,7 +81,7 @@
     @media screen and (max-width: 750px) {
         .section-{{ section.id }} .product-info6-divs {
             grid-template-columns: 1fr;
-        
+
     }
     }
 
@@ -187,10 +187,14 @@
                     <span>{{ section.settings.left_title }}</span>
                     <span>{{ section.settings.left_content }}</span>
                 </div>
-                <img src="{{ section.settings.left_img | image_url: width: 800 }}" alt="{{ section.settings.left_title | strip_html | truncate: 100 | default: 'Product detail left image' }}">
+                {% if section.settings.left_img != blank %}
+                    <img src="{{ section.settings.left_img | image_url: width: 800 }}" alt="{{ section.settings.left_title | strip_html | truncate: 100 | default: 'Product detail left image' }}">
+                {% endif %}
             </div>
             <div class="product-info6-div right">
-                <img src="{{ section.settings.right_img | image_url: width: 800 }}" alt="{{ section.settings.right_title | strip_html | truncate: 100 | default: 'Product detail right image' }}">
+                {% if section.settings.right_img != blank %}
+                    <img src="{{ section.settings.right_img | image_url: width: 800 }}" alt="{{ section.settings.right_title | strip_html | truncate: 100 | default: 'Product detail right image' }}">
+                {% endif %}
                 <div>
                     <span>{{ section.settings.right_title }}</span>
                     <span>{{ section.settings.right_content }}</span>

@@ -55,7 +55,7 @@
         font-size: 18px;
         color: #c9c9cc;
     }
-    
+
     {% if section.blocks.size > 0 %}
         .section-{{ section.id }} .product-info7-img {
             display: flex;
@@ -183,7 +183,9 @@
             </div>
         </div>
         <div class="product-info7-img">
-            <img src="{{ section.settings.img | image_url: width: 800 }}" alt="{{ section.settings.heading_title | default: 'Product detail' | escape }}">
+            {% if section.settings.img != blank %}
+                <img src="{{ section.settings.img | image_url: width: 800 }}" alt="{{ section.settings.heading_title | default: 'Product detail' | escape }}">
+            {% endif %}
             <div class="product-info7-blocks">
                 {% if section.blocks.size > 0 %}
                     {% for block in section.blocks %}

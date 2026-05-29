@@ -24,7 +24,7 @@
       object-fit: contain;
   }
 
-  
+
 
   .section-{{ section.id }} .product-info > div {
       width: 100%;
@@ -275,12 +275,14 @@
             {% for block in section.blocks %}
               {% if block.type == 'icon' %}
                 <div class="product-info-icon">
-                  <img
-                    src="{{ block.settings.image | image_url: width: 800 }}"
-                    width="100%"
-                    height="100%"
-                    alt="{{ block.settings.content | default: 'Feature icon' | escape }}"
-                  >
+                  {% if block.settings.image != blank %}
+                    <img
+                      src="{{ block.settings.image | image_url: width: 800 }}"
+                      width="100%"
+                      height="100%"
+                      alt="{{ block.settings.content | default: 'Feature icon' | escape }}"
+                    >
+                  {% endif %}
                   <span>{{ block.settings.content }}</span>
                 </div>
               {% endif %}

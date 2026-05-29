@@ -12,6 +12,13 @@
     "main": {
       "type": "bundle-builder",
       "blocks": {
+        "search_bar": {
+          "type": "search_bar",
+          "settings": {
+            "label": "Search products",
+            "placeholder": "Search knives by name, series, or type..."
+          }
+        },
         "series_mo": {
           "type": "series_collection",
           "settings": {
@@ -123,6 +130,7 @@
         }
       },
       "block_order": [
+        "search_bar",
         "series_mo",
         "series_lan",
         "series_supreme",
@@ -152,7 +160,5 @@
       }
     }
   },
-  "order": [
-    "main"
-  ]
+  "order": ["main"]
 }

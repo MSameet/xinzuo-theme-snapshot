@@ -1,5 +1,5 @@
-import { Component } from '@theme/component';
-import { CartAddEvent } from '@theme/events';
+import { Component } from "@theme/component";
+import { CartAddEvent } from "@theme/events";
 
 class BundleBuilderComponent extends Component {
   /** @type {Set<string>} Set of selected product IDs */
@@ -16,7 +16,10 @@ class BundleBuilderComponent extends Component {
   #isAddingToCart = false;
 
   /** @type {string} Currently active series filter handle ('all' = show all) */
-  #activeTab = 'all';
+  #activeTab = "all";
+
+  /** @type {string} Current product search query (lowercase) */
+  #searchQuery = "";
 
   connectedCallback() {
     super.connectedCallback();
@@ -32,7 +35,7 @@ class BundleBuilderComponent extends Component {
     this.#minItems = parseInt(this.dataset.minItems) || 3;
     this.#maxItems = parseInt(this.dataset.maxItems) || 8;
     try {
-      this.#tiers = JSON.parse(this.dataset.tiers || '[]');
+      this.#tiers = JSON.parse(this.dataset.tiers || "[]");
       this.#tiers.sort((a, b) => a.minItems - b.minItems);
     } catch {
       this.#tiers = [];
@@ -47,8 +50,8 @@ class BundleBuilderComponent extends Component {
         variantId: card.dataset.variantId,
         price: parseInt(card.dataset.price) || 0,
         comparePrice: parseInt(card.dataset.comparePrice) || 0,
-        title: card.dataset.title || '',
-        image: card.dataset.image || '',
+        title: card.dataset.title || "",
+        image: card.dataset.image || "",
       });
     }
   }
@@ -56,9 +59,9 @@ class BundleBuilderComponent extends Component {
   // --- Event Handlers ---
 
   handleCardClick(event) {
-    const card = event.target.closest('.bundle-card');
+    const card = event.target.closest(".bundle-card");
     if (!card) return;
-    if (card.dataset.available === 'false') return;
+    if (card.dataset.available === "false") return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -67,23 +70,23 @@ class BundleBuilderComponent extends Component {
 
     if (this.#selectedProductIds.has(productId)) {
       this.#selectedProductIds.delete(productId);
-      card.classList.remove('bundle-card--selected');
-      card.setAttribute('aria-pressed', 'false');
+      card.classList.remove("bundle-card--selected");
+      card.setAttribute("aria-pressed", "false");
     } else {
       if (this.#selectedProductIds.size >= this.#maxItems) {
         this.#shakeButton();
         return;
       }
       this.#selectedProductIds.add(productId);
-      card.classList.add('bundle-card--selected');
-      card.setAttribute('aria-pressed', 'true');
+      card.classList.add("bundle-card--selected");
+      card.setAttribute("aria-pressed", "true");
     }
 
     // Micro-interaction: brief scale pulse for tactile feedback
-    card.style.transform = 'scale(0.97)';
+    card.style.transform = "scale(0.97)";
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        card.style.transform = '';
+        card.style.transform = "";
       });
     });
 
@@ -97,7 +100,7 @@ class BundleBuilderComponent extends Component {
     this.#isAddingToCart = true;
     const btn = this.refs.addToCartBtn;
     const originalText = btn.textContent;
-    btn.textContent = 'Adding...';
+    btn.textContent = "Adding...";
     btn.disabled = true;
 
     try {
@@ -106,11 +109,11 @@ class BundleBuilderComponent extends Component {
 
       // Determine the discount percent and code for this bundle size
       let discountPercent = 0;
-      let discountCode = '';
+      let discountCode = "";
       for (const tier of this.#tiers) {
         if (bundleCount >= tier.minItems) {
           discountPercent = tier.discountPercent;
-          discountCode = tier.discountCode || '';
+          discountCode = tier.discountCode || "";
         }
       }
 
@@ -122,44 +125,44 @@ class BundleBuilderComponent extends Component {
           id: parseInt(data.variantId),
           quantity: 1,
           properties: {
-            '_bundle_id': bundleId,
-            '_bundle_count': String(bundleCount),
-            '_bundle_source': 'bundle-builder',
-            '_bundle_discount_percent': String(discountPercent),
-            '_bundle_discount_code': discountCode,
+            _bundle_id: bundleId,
+            _bundle_count: String(bundleCount),
+            _bundle_source: "bundle-builder",
+            _bundle_discount_percent: String(discountPercent),
+            _bundle_discount_code: discountCode,
           },
         });
       }
 
-      await fetch('/cart/add.js', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch("/cart/add.js", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items }),
       });
 
       // Open cart drawer so the customer can review their bundle
       // before deciding to checkout. The discount code will be applied
       // at checkout via the cart drawer's checkout button.
-      let cart = await fetch('/cart.js').then((r) => r.json());
+      let cart = await fetch("/cart.js").then((r) => r.json());
 
       document.dispatchEvent(
         new CartAddEvent({}, this.dataset.sectionId, {
-          source: 'bundle-builder',
+          source: "bundle-builder",
           itemCount: cart.item_count,
-          productId: '',
+          productId: "",
           sections: [],
-        })
+        }),
       );
 
-      btn.textContent = 'Added to Cart!';
+      btn.textContent = "Added to Cart!";
       setTimeout(() => {
         btn.textContent = originalText;
         btn.disabled = false;
         this.#isAddingToCart = false;
       }, 2500);
     } catch (error) {
-      console.error('Bundle add to cart error:', error);
-      btn.textContent = 'Error - Try Again';
+      console.error("Bundle add to cart error:", error);
+      btn.textContent = "Error - Try Again";
       setTimeout(() => {
         btn.textContent = originalText;
         btn.disabled = false;
@@ -168,7 +171,27 @@ class BundleBuilderComponent extends Component {
     }
   }
 
+  handleSearchInput(event) {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement)) return;
+    this.#searchQuery = (input.value || "").trim().toLowerCase();
+    if (this.refs.searchClear) {
+      this.refs.searchClear.hidden = this.#searchQuery.length === 0;
+    }
+    this.#filterCards();
+  }
 
+  handleSearchClear() {
+    this.#searchQuery = "";
+    if (this.refs.searchInput) {
+      this.refs.searchInput.value = "";
+      this.refs.searchInput.focus();
+    }
+    if (this.refs.searchClear) {
+      this.refs.searchClear.hidden = true;
+    }
+    this.#filterCards();
+  }
 
   handleTabClick(seriesHandle, event) {
     this.#activeTab = seriesHandle;
@@ -182,8 +205,8 @@ class BundleBuilderComponent extends Component {
     if (!container) return;
     const scrollAmount = container.offsetWidth * 0.65;
     container.scrollBy({
-      left: direction === 'left' ? -scrollAmount : scrollAmount,
-      behavior: 'smooth',
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
     });
   }
 
@@ -193,10 +216,14 @@ class BundleBuilderComponent extends Component {
     const container = this.refs.tabsContainer;
     if (!container) return;
 
-    container.addEventListener('scroll', () => this.#updateScrollIndicators(), { passive: true });
+    container.addEventListener("scroll", () => this.#updateScrollIndicators(), {
+      passive: true,
+    });
 
-    if (typeof ResizeObserver !== 'undefined') {
-      new ResizeObserver(() => this.#updateScrollIndicators()).observe(container);
+    if (typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(() => this.#updateScrollIndicators()).observe(
+        container,
+      );
     }
 
     this.#updateScrollIndicators();
@@ -212,18 +239,30 @@ class BundleBuilderComponent extends Component {
 
     // Fade masks
     if (this.refs.tabFadeLeft) {
-      this.refs.tabFadeLeft.classList.toggle('bundle-tabs__fade--visible', canScrollLeft);
+      this.refs.tabFadeLeft.classList.toggle(
+        "bundle-tabs__fade--visible",
+        canScrollLeft,
+      );
     }
     if (this.refs.tabFadeRight) {
-      this.refs.tabFadeRight.classList.toggle('bundle-tabs__fade--visible', canScrollRight);
+      this.refs.tabFadeRight.classList.toggle(
+        "bundle-tabs__fade--visible",
+        canScrollRight,
+      );
     }
 
     // Arrow buttons
     if (this.refs.tabArrowLeft) {
-      this.refs.tabArrowLeft.classList.toggle('bundle-tabs__arrow--visible', canScrollLeft);
+      this.refs.tabArrowLeft.classList.toggle(
+        "bundle-tabs__arrow--visible",
+        canScrollLeft,
+      );
     }
     if (this.refs.tabArrowRight) {
-      this.refs.tabArrowRight.classList.toggle('bundle-tabs__arrow--visible', canScrollRight);
+      this.refs.tabArrowRight.classList.toggle(
+        "bundle-tabs__arrow--visible",
+        canScrollRight,
+      );
     }
   }
 
@@ -240,9 +279,15 @@ class BundleBuilderComponent extends Component {
     const padInline = 40;
 
     if (tabRect.left < containerRect.left + padInline) {
-      container.scrollBy({ left: tabRect.left - containerRect.left - padInline, behavior: 'smooth' });
+      container.scrollBy({
+        left: tabRect.left - containerRect.left - padInline,
+        behavior: "smooth",
+      });
     } else if (tabRect.right > containerRect.right - padInline) {
-      container.scrollBy({ left: tabRect.right - containerRect.right + padInline, behavior: 'smooth' });
+      container.scrollBy({
+        left: tabRect.right - containerRect.right + padInline,
+        behavior: "smooth",
+      });
     }
   }
 
@@ -252,27 +297,46 @@ class BundleBuilderComponent extends Component {
     const tabs = this.refs.tabs || [];
     for (const tab of tabs) {
       const isActive = tab.dataset.series === this.#activeTab;
-      tab.classList.toggle('bundle-tabs__tab--active', isActive);
-      tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      tab.classList.toggle("bundle-tabs__tab--active", isActive);
+      tab.setAttribute("aria-pressed", isActive ? "true" : "false");
+    }
+  }
+
+  #cardMatchesTab(card) {
+    if (this.#activeTab === "all") return true;
+    const seriesList = (card.dataset.series || "").split(" ").filter(Boolean);
+    return seriesList.includes(this.#activeTab);
+  }
+
+  #cardMatchesSearch(card) {
+    if (!this.#searchQuery) return true;
+    const haystack = (card.dataset.searchText || "").toLowerCase();
+    return haystack.includes(this.#searchQuery);
+  }
+
+  #setCardVisible(card, visible) {
+    card.style.display = visible ? "" : "none";
+    if (visible) {
+      card.removeAttribute("hidden");
+    } else {
+      card.setAttribute("hidden", "");
     }
   }
 
   #filterCards() {
     const cards = this.refs.cards || [];
+    let visibleCount = 0;
+
     for (const card of cards) {
-      if (this.#activeTab === 'all') {
-        card.style.display = '';
-        card.removeAttribute('hidden');
-      } else {
-        const seriesList = (card.dataset.series || '').split(' ');
-        const matches = seriesList.includes(this.#activeTab);
-        card.style.display = matches ? '' : 'none';
-        if (matches) {
-          card.removeAttribute('hidden');
-        } else {
-          card.setAttribute('hidden', '');
-        }
-      }
+      const visible =
+        this.#cardMatchesTab(card) && this.#cardMatchesSearch(card);
+      this.#setCardVisible(card, visible);
+      if (visible) visibleCount += 1;
+    }
+
+    if (this.refs.searchEmpty) {
+      const showEmpty = this.#searchQuery.length > 0 && visibleCount === 0;
+      this.refs.searchEmpty.hidden = !showEmpty;
     }
   }
 
@@ -280,22 +344,25 @@ class BundleBuilderComponent extends Component {
     const tabs = this.refs.tabs || [];
     for (const tab of tabs) {
       const series = tab.dataset.series;
-      const countEl = tab.querySelector('[data-series-count]');
+      const countEl = tab.querySelector("[data-series-count]");
       if (!countEl) continue;
 
       let count = 0;
-      if (series === 'all') {
+      if (series === "all") {
         count = this.#selectedProductIds.size;
       } else {
         const cards = this.refs.cards || [];
         for (const card of cards) {
-          const seriesList = (card.dataset.series || '').split(' ');
-          if (seriesList.includes(series) && this.#selectedProductIds.has(card.dataset.productId)) {
+          const seriesList = (card.dataset.series || "").split(" ");
+          if (
+            seriesList.includes(series) &&
+            this.#selectedProductIds.has(card.dataset.productId)
+          ) {
             count++;
           }
         }
       }
-      countEl.textContent = count > 0 ? `(${count})` : '';
+      countEl.textContent = count > 0 ? `(${count})` : "";
     }
   }
 
@@ -309,9 +376,9 @@ class BundleBuilderComponent extends Component {
     const summaryBar = this.refs.summaryBar;
     if (summaryBar) {
       if (hasSelection) {
-        summaryBar.classList.add('bundle-summary--visible');
+        summaryBar.classList.add("bundle-summary--visible");
       } else {
-        summaryBar.classList.remove('bundle-summary--visible');
+        summaryBar.classList.remove("bundle-summary--visible");
       }
     }
 
@@ -324,39 +391,52 @@ class BundleBuilderComponent extends Component {
     if (this.refs.progressText) {
       if (count === 0) {
         this.refs.progressText.textContent = `Select at least ${this.#minItems} items to unlock your discount`;
-        this.refs.progressText.classList.remove('bundle-builder__progress--complete');
+        this.refs.progressText.classList.remove(
+          "bundle-builder__progress--complete",
+        );
       } else if (count < this.#minItems) {
         const remaining = this.#minItems - count;
-        this.refs.progressText.textContent = `Select ${remaining} more item${remaining > 1 ? 's' : ''} to unlock your discount`;
-        this.refs.progressText.classList.remove('bundle-builder__progress--complete');
+        this.refs.progressText.textContent = `Select ${remaining} more item${remaining > 1 ? "s" : ""} to unlock your discount`;
+        this.refs.progressText.classList.remove(
+          "bundle-builder__progress--complete",
+        );
       } else {
-        this.refs.progressText.textContent = `${count} item${count > 1 ? 's' : ''} selected — discount applied at checkout!`;
-        this.refs.progressText.classList.add('bundle-builder__progress--complete');
+        this.refs.progressText.textContent = `${count} item${count > 1 ? "s" : ""} selected — discount applied at checkout!`;
+        this.refs.progressText.classList.add(
+          "bundle-builder__progress--complete",
+        );
       }
     }
 
     // Update progress bar — fills to 100% at max discount tier
     if (this.refs.progressFill) {
-      const lastTierMin = this.#tiers.length > 0
-        ? this.#tiers[this.#tiers.length - 1].minItems
-        : this.#maxItems;
+      const lastTierMin =
+        this.#tiers.length > 0
+          ? this.#tiers[this.#tiers.length - 1].minItems
+          : this.#maxItems;
       const percent = Math.min((count / lastTierMin) * 100, 100);
       this.refs.progressFill.style.width = `${percent}%`;
 
       // Color based on tier achievement
       const fill = this.refs.progressFill;
-      fill.classList.remove('bundle-summary__progress-fill--tier-active', 'bundle-summary__progress-fill--complete');
+      fill.classList.remove(
+        "bundle-summary__progress-fill--tier-active",
+        "bundle-summary__progress-fill--complete",
+      );
       if (count >= lastTierMin) {
-        fill.classList.add('bundle-summary__progress-fill--complete');
+        fill.classList.add("bundle-summary__progress-fill--complete");
       } else if (this.#tiers.length > 0 && count >= this.#tiers[0].minItems) {
-        fill.classList.add('bundle-summary__progress-fill--tier-active');
+        fill.classList.add("bundle-summary__progress-fill--tier-active");
       }
 
       // Update tier markers
       const markers = this.refs.tierMarkers || [];
       for (const marker of markers) {
         const tierMin = parseInt(marker.dataset.tierMin) || 0;
-        marker.classList.toggle('bundle-summary__tier-marker--reached', count >= tierMin);
+        marker.classList.toggle(
+          "bundle-summary__tier-marker--reached",
+          count >= tierMin,
+        );
       }
     }
 
@@ -368,7 +448,8 @@ class BundleBuilderComponent extends Component {
 
     // Enable/disable CTA
     if (this.refs.addToCartBtn) {
-      this.refs.addToCartBtn.disabled = count < this.#minItems || this.#isAddingToCart;
+      this.refs.addToCartBtn.disabled =
+        count < this.#minItems || this.#isAddingToCart;
     }
 
     // Update per-tab selected counts
@@ -397,7 +478,9 @@ class BundleBuilderComponent extends Component {
 
     // Display prices
     if (activeTier) {
-      const savingsAmount = Math.round((totalPrice * activeTier.discountPercent) / 100);
+      const savingsAmount = Math.round(
+        (totalPrice * activeTier.discountPercent) / 100,
+      );
       const discountedPrice = totalPrice - savingsAmount;
 
       // Show original price with strikethrough
@@ -409,7 +492,9 @@ class BundleBuilderComponent extends Component {
       // Show discounted price in red
       if (this.refs.totalPrice) {
         this.refs.totalPrice.textContent = this.#formatMoney(discountedPrice);
-        this.refs.totalPrice.classList.add('bundle-summary__total-price--discounted');
+        this.refs.totalPrice.classList.add(
+          "bundle-summary__total-price--discounted",
+        );
       }
 
       // Show savings text
@@ -424,7 +509,9 @@ class BundleBuilderComponent extends Component {
       }
       if (this.refs.totalPrice) {
         this.refs.totalPrice.textContent = this.#formatMoney(totalPrice);
-        this.refs.totalPrice.classList.remove('bundle-summary__total-price--discounted');
+        this.refs.totalPrice.classList.remove(
+          "bundle-summary__total-price--discounted",
+        );
       }
       if (this.refs.totalSavings) {
         this.refs.totalSavings.hidden = true;
@@ -433,7 +520,7 @@ class BundleBuilderComponent extends Component {
 
     // Display tier label
     if (this.refs.tierLabel) {
-      this.refs.tierLabel.textContent = activeTier ? activeTier.label : '';
+      this.refs.tierLabel.textContent = activeTier ? activeTier.label : "";
     }
 
     // Display next tier hint
@@ -442,9 +529,9 @@ class BundleBuilderComponent extends Component {
         const needed = nextTier.minItems - count;
         this.refs.nextTierHint.textContent = `Add ${needed} more for ${nextTier.label}!`;
       } else if (activeTier) {
-        this.refs.nextTierHint.textContent = 'Maximum discount unlocked!';
+        this.refs.nextTierHint.textContent = "Maximum discount unlocked!";
       } else {
-        this.refs.nextTierHint.textContent = '';
+        this.refs.nextTierHint.textContent = "";
       }
     }
   }
@@ -453,15 +540,15 @@ class BundleBuilderComponent extends Component {
     const strip = this.refs.thumbnailStrip;
     if (!strip) return;
 
-    strip.innerHTML = '';
+    strip.innerHTML = "";
     for (const productId of this.#selectedProductIds) {
       const data = this.#productData.get(productId);
       if (!data || !data.image) continue;
 
-      const img = document.createElement('img');
+      const img = document.createElement("img");
       img.src = data.image;
       img.alt = data.title;
-      img.className = 'bundle-summary__thumb';
+      img.className = "bundle-summary__thumb";
       img.width = 40;
       img.height = 40;
       strip.appendChild(img);
@@ -469,17 +556,17 @@ class BundleBuilderComponent extends Component {
   }
 
   #formatMoney(cents) {
-    return '$' + (cents / 100).toFixed(2);
+    return "$" + (cents / 100).toFixed(2);
   }
 
   #shakeButton() {
     const btn = this.refs.addToCartBtn;
     if (!btn) return;
-    btn.classList.add('bundle-summary__cta--shake');
-    setTimeout(() => btn.classList.remove('bundle-summary__cta--shake'), 500);
+    btn.classList.add("bundle-summary__cta--shake");
+    setTimeout(() => btn.classList.remove("bundle-summary__cta--shake"), 500);
   }
 }
 
-if (!customElements.get('bundle-builder-component')) {
-  customElements.define('bundle-builder-component', BundleBuilderComponent);
+if (!customElements.get("bundle-builder-component")) {
+  customElements.define("bundle-builder-component", BundleBuilderComponent);
 }

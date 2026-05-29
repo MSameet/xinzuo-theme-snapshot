@@ -39,12 +39,99 @@ bundle-builder-component {
   font-family: "Sen", sans-serif;
   font-size: 16px;
   font-weight: 700;
-  color: #FFD380;
+  color: #ffd380;
   transition: color 0.3s ease;
 }
 
 .bundle-builder__progress--complete {
-  color: #22C55E;
+  color: #22c55e;
+}
+
+/* ============================================
+   Search
+   ============================================ */
+
+.bundle-builder__search {
+  max-width: 560px;
+  margin: 0 auto 32px;
+}
+
+.bundle-builder__search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.bundle-builder__search-icon {
+  position: absolute;
+  left: 18px;
+  color: rgba(255, 255, 255, 0.45);
+  pointer-events: none;
+}
+
+.bundle-builder__search-input {
+  width: 100%;
+  font-family: "Inter", var(--font-body--family), sans-serif;
+  font-size: 16px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 100px;
+  padding: 14px 48px 14px 50px;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.bundle-builder__search-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.bundle-builder__search-input:focus {
+  border-color: var(--xinzuo-accent, #ffd380);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(255, 211, 128, 0.15);
+}
+
+.bundle-builder__search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.bundle-builder__search-clear {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.bundle-builder__search-clear:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.bundle-builder__search-empty {
+  text-align: center;
+  padding: 40px 20px 20px;
+  margin: 0;
+  font-family: "Inter", var(--font-body--family), sans-serif;
+  font-size: 18px;
+  color: #c9c9cc;
 }
 
 /* ============================================
@@ -131,7 +218,11 @@ bundle-builder-component {
   padding: 0;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease, background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.3s ease,
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -170,7 +261,11 @@ bundle-builder-component {
   border-radius: 100px;
   padding: 10px 22px;
   cursor: pointer;
-  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
@@ -184,14 +279,14 @@ bundle-builder-component {
 
 .bundle-tabs__tab--active {
   color: var(--xinzuo-accent-text, #000000);
-  background: var(--xinzuo-accent, #FFD380);
-  border-color: var(--xinzuo-accent, #FFD380);
+  background: var(--xinzuo-accent, #ffd380);
+  border-color: var(--xinzuo-accent, #ffd380);
   box-shadow: 0 2px 12px rgba(255, 211, 128, 0.35);
 }
 
 .bundle-tabs__tab--active:hover {
-  background: var(--xinzuo-accent-hover, #FFDC99);
-  border-color: var(--xinzuo-accent-hover, #FFDC99);
+  background: var(--xinzuo-accent-hover, #ffdc99);
+  border-color: var(--xinzuo-accent-hover, #ffdc99);
   color: var(--xinzuo-accent-text, #000000);
 }
 
@@ -212,159 +307,91 @@ bundle-builder-component {
 }
 
 /* ============================================
-   Bundle Card
+   Bundle Card (xz-product-card layout + selection)
    ============================================ */
 
 .bundle-card {
   position: relative;
   cursor: pointer;
-  border: 2px solid transparent;
   border-radius: 10px;
   overflow: hidden;
-  transition: border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-  background: rgba(255, 255, 255, 0.04);
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
 
+.bundle-card .xz-product-card {
+  width: 100%;
+  pointer-events: none;
+}
+
+.bundle-card .xz-card-link,
+.bundle-card .xz-card-atc,
+.bundle-card a.xz-card-atc {
+  pointer-events: none;
+}
+
+.bundle-card .xz-card-btn-wrap {
+  display: none;
+}
+
 .bundle-card:hover {
-  border-color: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
 }
 
-
-/* Selected State */
 .bundle-card--selected {
-  border-color: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15), 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 0 0 2px var(--xinzuo-accent, #ffd380),
+    0 4px 24px rgba(255, 211, 128, 0.2);
 }
 
 .bundle-card--selected:hover {
-  border-color: rgba(255, 255, 255, 0.45);
   transform: translateY(-2px);
 }
 
-/* ============================================
-   Checkbox Overlay
-   ============================================ */
-
-.bundle-card__checkbox {
+/* Selection checkbox (replaces quick-add on bundle cards) */
+.bundle-card__select {
   position: absolute;
   top: 10px;
   right: 10px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  background: rgba(0, 0, 0, 0.4);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.bundle-card__checkbox {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2;
-  transition: all 0.2s ease;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
 }
 
 .bundle-card__checkbox svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   opacity: 0;
   transition: opacity 0.2s ease;
 }
 
 .bundle-card--selected .bundle-card__checkbox {
-  background: #22C55E;
-  border-color: #22C55E;
+  background: #22c55e;
+  border-color: #22c55e;
+  transform: scale(1.05);
 }
 
 .bundle-card--selected .bundle-card__checkbox svg {
   opacity: 1;
-}
-
-/* ============================================
-   Card Image
-   ============================================ */
-
-.bundle-card__image {
-  position: relative;
-  aspect-ratio: 1 / 1;
-  overflow: hidden;
-  background: #1a1a1a;
-  border-radius: 10px 10px 0 0;
-}
-
-.bundle-card__image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: opacity 0.3s ease, transform 0.35s ease;
-}
-
-.bundle-card:hover .bundle-card__image img {
-  transform: scale(1.04);
-}
-
-.bundle-card__image::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  box-shadow: inset 0 -40px 30px -20px rgba(0, 0, 0, 0.25);
-  pointer-events: none;
-}
-
-
-.bundle-card__badge {
-  position: absolute;
-  background-color: var(--xinzuo-red, #C81E1E);
-  padding: 5px 15px;
-  border-radius: 20px;
-  top: 10px;
-  left: 15px;
-  font-family: "Sen", sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  color: #fff;
-  z-index: 1;
-}
-
-/* ============================================
-   Card Info
-   ============================================ */
-
-.bundle-card__info {
-  padding: 14px 12px 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.bundle-card__title {
-  font-family: "Sen", sans-serif;
-  font-weight: 700;
-  font-size: 18px;
-  color: #fff;
-  margin: 0 0 6px;
-  line-height: 135%;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.bundle-card__price {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.bundle-card__current-price {
-  font-family: "Sen", sans-serif;
-  font-weight: 700;
-  font-size: 22px;
-  color: #fff;
-}
-
-.bundle-card__compare-price {
-  font-size: 16px;
-  text-decoration: line-through;
-  color: #828282;
 }
 
 /* ============================================
@@ -453,7 +480,7 @@ bundle-builder-component {
   font-family: "Sen", sans-serif;
   font-weight: 700;
   font-size: 16px;
-  color: #22C55E;
+  color: #22c55e;
 }
 
 .bundle-summary__next-tier {
@@ -508,13 +535,13 @@ bundle-builder-component {
 }
 
 .bundle-summary__total-price--discounted {
-  color: #22C55E;
+  color: #22c55e;
 }
 
 .bundle-summary__total-savings {
   display: block;
   font-size: 13px;
-  color: #22C55E;
+  color: #22c55e;
   font-weight: 700;
 }
 
@@ -525,7 +552,7 @@ bundle-builder-component {
 /* CTA Button */
 .bundle-summary__cta {
   padding: 14px 28px;
-  background: var(--xinzuo-accent, #FFD380);
+  background: var(--xinzuo-accent, #ffd380);
   color: var(--xinzuo-accent-text, #000000);
   border: none;
   border-radius: 4px;
@@ -540,7 +567,7 @@ bundle-builder-component {
 }
 
 .bundle-summary__cta:hover:not(:disabled) {
-  background: var(--xinzuo-accent-hover, #FFDC99);
+  background: var(--xinzuo-accent-hover, #ffdc99);
   color: var(--xinzuo-accent-text, #000000);
   transform: translateY(-1px);
 }
@@ -555,9 +582,16 @@ bundle-builder-component {
 }
 
 @keyframes bundle-shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  75% { transform: translateX(6px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
 }
 
 /* Progress Bar */
@@ -579,16 +613,18 @@ bundle-builder-component {
 .bundle-summary__progress-fill {
   height: 100%;
   background: rgba(255, 255, 255, 0.45);
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+  transition:
+    width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.3s ease;
   border-radius: 8px;
 }
 
 .bundle-summary__progress-fill--tier-active {
-  background: #FFD380;
+  background: #ffd380;
 }
 
 .bundle-summary__progress-fill--complete {
-  background: #22C55E;
+  background: #22c55e;
 }
 
 .bundle-summary__tier-marker {
@@ -628,10 +664,6 @@ bundle-builder-component {
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
   }
-
-  .bundle-card__current-price {
-    font-size: 18px;
-  }
 }
 
 /* ============================================
@@ -641,18 +673,6 @@ bundle-builder-component {
 @media screen and (max-width: 1025px) {
   .bundle-builder__heading {
     font-size: 36px;
-  }
-
-  .bundle-card__title {
-    font-size: 15px;
-  }
-
-  .bundle-card__current-price {
-    font-size: 18px;
-  }
-
-  .bundle-card__compare-price {
-    font-size: 14px;
   }
 }
 
@@ -700,26 +720,28 @@ bundle-builder-component {
     width: 32px;
   }
 
+  .bundle-builder__search {
+    margin-bottom: 24px;
+  }
+
+  .bundle-builder__search-input {
+    font-size: 15px;
+    padding: 12px 44px 12px 44px;
+  }
+
   .bundle-builder__grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
 
-  .bundle-card__info {
-    padding: 8px;
+  .bundle-card__checkbox {
+    width: 32px;
+    height: 32px;
   }
 
-  .bundle-card__title {
-    font-size: 14px;
-    margin-bottom: 4px;
-  }
-
-  .bundle-card__current-price {
-    font-size: 16px;
-  }
-
-  .bundle-card__compare-price {
-    font-size: 13px;
+  .bundle-card__checkbox svg {
+    width: 14px;
+    height: 14px;
   }
 
   /* Mobile Summary Bar */
@@ -733,10 +755,19 @@ bundle-builder-component {
     align-items: stretch;
   }
 
-  .bundle-summary__selected { order: 1; }
-  .bundle-summary__savings { order: 2; }
-  .bundle-summary__progress-bar { order: 3; margin-top: 0; }
-  .bundle-summary__action { order: 4; }
+  .bundle-summary__selected {
+    order: 1;
+  }
+  .bundle-summary__savings {
+    order: 2;
+  }
+  .bundle-summary__progress-bar {
+    order: 3;
+    margin-top: 0;
+  }
+  .bundle-summary__action {
+    order: 4;
+  }
 
   .bundle-summary__selected {
     justify-content: center;
@@ -837,11 +868,14 @@ bundle-builder-component {
     height: 14px;
   }
 
-  .bundle-card__checkbox {
-    width: 24px;
-    height: 24px;
+  .bundle-card__select {
     top: 8px;
     right: 8px;
+  }
+
+  .bundle-card__checkbox {
+    width: 28px;
+    height: 28px;
   }
 
   .bundle-card__checkbox svg {
