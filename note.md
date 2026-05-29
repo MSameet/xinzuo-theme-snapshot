@@ -1,33 +1,35 @@
 # Xinzuo Theme — Branch Change Log
 
-**Branch:** `main` (9 commits after initial theme import)  
+**Branch:** `main` (10 commits after initial theme import)  
 **Date range:** 2026-05-25 → 2026-05-29  
-**Baseline:** `4f6cdde` — initial Horizon-based Xinzuo theme snapshot
+**Baseline:** `4f6cdde` — initial Horizon-based Xinzuo theme snapshot  
+**Latest:** `3fc5dd0` — Improve page load by gating Swiper and deferring site-overrides CSS
 
 ---
 
 ## What I picked
 
-**Unify the storefront around a single glass-panel / bento visual system, backed by one shared product-card component — then start the highest-leverage performance work (Swiper gating + LCP cleanup).**
+**Unify the storefront around a single glass-panel / bento visual system, backed by one shared product-card component — then ship the highest-leverage performance work (Swiper gating + LCP cleanup + non-blocking CSS).**
 
 Concretely, the work clusters into three bets:
 
 1. **Design system** — Replace fragmented section-specific card layouts with `xz-product-card`, glass styling in `site-overrides.css`, and consistent button treatment across homepage, collections, reviews, blogs, and bundle builder.
 2. **Template hygiene** — Remove ~30 duplicate per-series product/collection JSON templates and restore a working default `collection.json` so `/collections/*` routes render correctly.
-3. **Performance (in progress, not yet committed)** — Stop loading Swiper (~160 KB JS/CSS) on every page; deduplicate PDP LCP preloads; load `site-overrides.css` non-blocking.
+3. **Performance** — Stop loading Swiper (~160 KB JS/CSS) on every page; deduplicate PDP LCP preloads; load `site-overrides.css` non-blocking; lazy-load Swiper via `xzLoadSwiper()` for cart upsells on pages that skip eager load.
 
 ---
 
 ## Why it's the highest-impact thing here
 
-| Area                         | Impact                                                                                                                                                                                                                                                                    |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Shared product cards**     | Homepage sliders, collection grids, bundle builder, and cart upsells all show products. One card snippet (`snippets/xz-product-card.liquid`) + one CSS layer (`assets/site-overrides.css`) fixes visual drift everywhere at once instead of patching sections one-by-one. |
-| **Template pruning**         | Deleted templates were ~13,600 lines of near-duplicates. Fewer templates = less editor confusion, faster theme maintenance, and no broken collection URLs when a series-specific template was removed but not replaced.                                                   |
-| **Homepage catalogue bento** | “Shop by category” is a primary navigation surface. Bento + glass panels make hierarchy scannable on desktop and tablet without separate mobile/desktop markup paths.                                                                                                     |
-| **Reviews / social proof**   | Glass cards + capped height keep Judge.me content on-brand; looping `best-reviews` removes pagination friction on the homepage.                                                                                                                                           |
-| **Swiper conditional load**  | Swiper was global in `layout/theme.liquid` but only used on ~8 surfaces. Gating saves ~160 KB on collection pages, static pages, and search — the highest-traffic pages that previously paid for an unused carousel library.                                              |
-| **LCP preload dedup**        | Two competing PDP image preloads (path-based + template-based) wasted bandwidth and delayed LCP on Slow 4G traces documented in theme comments.                                                                                                                           |
+| Area                            | Impact                                                                                                                                                                                                                                                                    |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Shared product cards**        | Homepage sliders, collection grids, bundle builder, and cart upsells all show products. One card snippet (`snippets/xz-product-card.liquid`) + one CSS layer (`assets/site-overrides.css`) fixes visual drift everywhere at once instead of patching sections one-by-one. |
+| **Template pruning**            | Deleted templates were ~13,600 lines of near-duplicates. Fewer templates = less editor confusion, faster theme maintenance, and no broken collection URLs when a series-specific template was removed but not replaced.                                                   |
+| **Homepage catalogue bento**    | “Shop by category” is a primary navigation surface. Bento + glass panels make hierarchy scannable on desktop and tablet without separate mobile/desktop markup paths.                                                                                                     |
+| **Reviews / social proof**      | Glass cards + capped height keep Judge.me content on-brand; looping `best-reviews` removes pagination friction on the homepage.                                                                                                                                           |
+| **Swiper conditional load**     | Swiper was global in `layout/theme.liquid` but only used on ~8 surfaces. Gating saves ~160 KB on collection pages, static pages, and search — the highest-traffic pages that previously paid for an unused carousel library.                                              |
+| **LCP preload dedup**           | Two competing PDP image preloads (path-based + template-based) wasted bandwidth and delayed LCP on Slow 4G traces documented in theme comments.                                                                                                                           |
+| **Non-blocking site-overrides** | `site-overrides.css` (~1,885 lines) was render-blocking on every page. Preload + `onload` stylesheet swap removes it from the critical path.                                                                                                                              |
 
 ---
 
@@ -95,7 +97,7 @@ Concretely, the work clusters into three bets:
 - **`snippets/product-card.liquid`** — Wired to shared layout patterns.
 - **`sections/home-products.liquid`** — Slimmed down to use shared card snippet.
 
-Before/after screenshots captured: `shop_by_category-*.png`, `products_page-*.png`, `chef-review-*.png`.
+Before/after screenshots: `shop_by_category-*.png`, `products_page-*.png`, `chef-review-*.png`.
 
 ---
 
@@ -119,21 +121,33 @@ Before/after: `bundle_before.png`, `bundle_after.png`.
 
 ---
 
-### Uncommitted (working tree — 2026-05-29)
+#### 10. `3fc5dd0` — Improve page load by gating Swiper and deferring site-overrides CSS (2026-05-29)
 
-These changes are **not yet in git** but represent the current performance batch:
+Performance batch — **376 insertions, 94 deletions** across 17 files.
 
-| File                            | Change                                                                                                                                                                                                                                                                                                                |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `layout/theme.liquid`           | `needs_swiper` flag — eager Swiper on index, product, cart, list-collections, bundles/reviews suffixes, and theme editor; lazy loader elsewhere. Removed duplicate path-based PDP preload; consolidated single LCP preload using first gallery media. `site-overrides.css` switched to preload/onload (non-blocking). |
-| `snippets/swiper-assets.liquid` | **New** — conditional eager Swiper CSS (preload) + deferred JS.                                                                                                                                                                                                                                                       |
-| `snippets/swiper-loader.liquid` | **New** — `window.xzLoadSwiper()` promise-based lazy loader for pages without eager assets.                                                                                                                                                                                                                           |
-| `snippets/cart-drawer.liquid`   | Cart recommended-products slider calls `xzLoadSwiper()` before init/reinit so upsells work on collection/static pages without global Swiper.                                                                                                                                                                          |
-| `assets/site-overrides.css`     | Glass cart icon button background: `rgba(255,255,255,0.05)` → `rgba(0,0,0,0.5)` for contrast.                                                                                                                                                                                                                         |
-| `PERFORMANCE-TODO.md`           | Audited backlog; P0 item #1 (Stop loading Swiper on every page) marked partially complete.                                                                                                                                                                                                                            |
-| `.gitignore`                    | Added `*.md` (ignores markdown from git).                                                                                                                                                                                                                                                                             |
+**`layout/theme.liquid`**
 
-Screenshot evidence: `blogs_before.png` / `blogs_after.png`, and others listed above.
+- Added `needs_swiper` Liquid flag — eager Swiper on index, product, cart, list-collections, bundles/reviews page suffixes, and theme editor (`design_mode`); lazy loader on all other templates.
+- Removed duplicate path-based PDP preload; consolidated into a single LCP preload using first gallery media (falls back to `featured_image`).
+- Switched `site-overrides.css` from blocking `<link rel="stylesheet">` to preload + `onload` swap (`fetchpriority="low"`).
+
+**New snippets**
+
+- **`snippets/swiper-assets.liquid`** — Eager Swiper CSS (preload/onload) + deferred JS with `data-swiper-js`.
+- **`snippets/swiper-loader.liquid`** — `window.xzLoadSwiper()` promise-based lazy loader for pages that omit eager assets.
+
+**`snippets/cart-drawer.liquid`**
+
+- Recommended-products slider calls `xzLoadSwiper()` before `initAll()` / `reinitAll()` so cart upsells work on collection and static pages without global Swiper.
+
+**`assets/site-overrides.css`**
+
+- Glass cart icon button background: `rgba(255,255,255,0.05)` → `rgba(0,0,0,0.5)` for contrast.
+
+**Docs / evidence committed with this batch**
+
+- `note.md` (this file)
+- Before/after PNGs: `blogs_*`, `bundle_*`, `chef-review-*`, `products_page-*`, `shop_by_category-*`, hero screenshot
 
 ---
 
@@ -145,21 +159,23 @@ Screenshot evidence: `blogs_before.png` / `blogs_after.png`, and others listed a
 **Templates:** pruned 38 JSON templates; restored `collection.json`; updated `index.json`, `page.reviews.json`, `page.bundle-builder.json`  
 **Layout:** `theme.liquid`
 
+**Working tree:** clean as of `3fc5dd0`.
+
 ---
 
 ## What I'd do next
 
-### Immediate (commit + verify)
+### Immediate (verify)
 
-1. **Commit the Swiper gating work** — `theme.liquid`, `swiper-assets.liquid`, `swiper-loader.liquid`, `cart-drawer.liquid`, and the cart icon CSS fix.
-2. **Lighthouse before/after** — Run on homepage, one PDP (`/products/zhen-xz05-series-8-inch-chef-knife`), and `/collections/all`. Confirm Swiper absent on collection; confirm cart drawer upsell slider still initializes via `xzLoadSwiper()`.
-3. **Decide on `.gitignore`** — `*.md` will exclude `note.md` and `PERFORMANCE-TODO.md` from git; narrow to specific paths if docs should be tracked.
+1. **Lighthouse before/after** — Run on homepage, one PDP (`/products/zhen-xz05-series-8-inch-chef-knife`), and `/collections/all`. Confirm Swiper absent on collection; confirm cart drawer upsell slider still initializes via `xzLoadSwiper()`.
+2. **Theme editor smoke test** — `needs_swiper = true` in `design_mode` ensures sliders preview correctly in Shopify admin.
+3. **Measure real savings** — Compare network tab: collection/search pages should no longer fetch `swiper-bundle.min.js` / `.css` on initial load.
 
-### P0 performance (from `PERFORMANCE-TODO.md`)
+### P0 performance (next batch)
 
 4. **Migrate Swiper sections to Horizon native slideshow** — `collection_slider`, `home-slider`, etc. Eliminates Swiper entirely (~160 KB + duplicate init logic).
 5. **Gate theme JS modules per template** — Load `media-gallery.js`, `variant-picker.js`, `quick-add.js` only where needed (~20 ES modules currently global).
-6. **Collection LCP** — Preload first product image on collection pages (already partially in `theme.liquid`; verify sizing matches grid).
+6. **Collection LCP** — Preload first product image on collection pages (partially in `theme.liquid`; verify sizing matches grid).
 
 ### Design / UX follow-ups
 
@@ -170,8 +186,8 @@ Screenshot evidence: `blogs_before.png` / `blogs_after.png`, and others listed a
 
 ### Housekeeping
 
-11. **Remove screenshot PNGs from repo root** or move to a `docs/` folder before production deploy.
-12. **Theme editor smoke test** — `needs_swiper = true` in `design_mode` ensures sliders preview correctly in Shopify admin.
+11. **Move screenshot PNGs** — Consider relocating before/after PNGs from repo root to a `docs/` folder to keep the theme root clean for deploy.
+12. **FOUC check on site-overrides** — Non-blocking CSS can cause a brief unstyled flash; verify acceptable on slow 3G or add critical inline rules if needed.
 
 ---
 
@@ -189,3 +205,4 @@ Screenshot evidence: `blogs_before.png` / `blogs_after.png`, and others listed a
 | `9cdf346` | 2026-05-25 | Update product cards with shared home layout and glass cart icon          |
 | `31d6fc1` | 2026-05-26 | Fix collection page routing and image URL guards                          |
 | `368bc01` | 2026-05-29 | Add bundle builder search bar and align cards with xz-product-card layout |
+| `3fc5dd0` | 2026-05-29 | Improve page load by gating Swiper and deferring site-overrides CSS       |
