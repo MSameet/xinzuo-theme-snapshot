@@ -1,0 +1,13 @@
+{%- comment -%}
+  Swiper bundle — load only when needs_swiper is true in layout/theme.liquid.
+  CSS uses preload/onload so it does not block render.
+{%- endcomment -%}
+<link
+  rel="preload"
+  href="{{ 'swiper-bundle.min.css' | asset_url }}"
+  as="style"
+  onload="this.onload=null;this.rel='stylesheet'"
+  fetchpriority="low"
+>
+<noscript><link rel="stylesheet" href="{{ 'swiper-bundle.min.css' | asset_url }}"></noscript>
+<script src="{{ 'swiper-bundle.min.js' | asset_url }}" defer data-swiper-js></script>

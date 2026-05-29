@@ -25,19 +25,19 @@
     // Prevent multiple initializations
     if (window.CartRecommendedSliderLoaded) return;
     window.CartRecommendedSliderLoaded = true;
-    
+
     // Create global namespace for cart recommended slider
     window.CartRecommendedSlider = {
       swiperInstances: new WeakMap(),
       observerSetup: false,
-      
+
       // Destroy a single slider's Swiper instance
       destroySlider: function(sliderContainer) {
         if (!sliderContainer) return;
-        
+
         const swiperEl = sliderContainer.querySelector('.swiper');
         if (!swiperEl) return;
-        
+
         // Destroy existing Swiper instance
         if (swiperEl.swiper) {
           try {
@@ -46,25 +46,25 @@
             // Ignore errors during destroy
           }
         }
-        
+
         // Remove from WeakMap
         if (this.swiperInstances.has(swiperEl)) {
           this.swiperInstances.delete(swiperEl);
         }
       },
-      
+
       // Initialize a single slider container
       initSlider: function(sliderContainer, forceReinit = false) {
         if (!sliderContainer) return;
-        
+
         const swiperEl = sliderContainer.querySelector('.swiper');
         if (!swiperEl) return;
-        
+
         // If force reinit, destroy existing instance first
         if (forceReinit) {
           this.destroySlider(sliderContainer);
         }
-        
+
         // Check if already initialized and still valid
         if (swiperEl.swiper && !forceReinit) {
           // Verify the swiper is still working by checking if slides exist
@@ -76,14 +76,14 @@
             this.destroySlider(sliderContainer);
           }
         }
-        
+
         const isDrawer = sliderContainer.classList.contains('cart-recommended-products--drawer');
         const counterCurrent = sliderContainer.querySelector('.cart-recommended-products__counter-current');
-        
+
         const updateCounter = (index) => {
           if (counterCurrent) counterCurrent.textContent = index + 1;
         };
-        
+
         const swiper = new Swiper(swiperEl, {
           slidesPerView: 1,
           spaceBetween: 20,
@@ -141,52 +141,52 @@
             }
           }
         });
-        
+
         this.swiperInstances.set(swiperEl, swiper);
         this.initAddToCartButtons(sliderContainer);
       },
-      
+
       // Initialize Add to Cart buttons
       initAddToCartButtons: function(sliderContainer) {
         const addButtons = sliderContainer.querySelectorAll('.cart-recommended-product__add-btn');
-        
+
         addButtons.forEach(button => {
           if (button.dataset.initialized === 'true') return;
           button.dataset.initialized = 'true';
-          
+
           button.addEventListener('click', async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            
+
             if (button.disabled) return;
-            
+
             const variantId = button.dataset.variantId;
             const originalText = button.querySelector('.cart-recommended-product__add-btn-text').textContent;
             button.disabled = true;
             button.querySelector('.cart-recommended-product__add-btn-text').textContent = 'Adding...';
             button.classList.add('cart-recommended-product__add-btn--adding');
-            
+
             try {
               const response = await fetch('/cart/add.js', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ items: [{ id: parseInt(variantId), quantity: 1 }] })
               });
-              
+
               if (!response.ok) throw new Error('Failed to add to cart');
-              
+
               button.querySelector('.cart-recommended-product__add-btn-text').textContent = 'Added ✓';
               button.classList.remove('cart-recommended-product__add-btn--adding');
               button.classList.add('cart-recommended-product__add-btn--added');
-              
+
               const cartResponse = await fetch('/cart.js');
               const cart = await cartResponse.json();
-              
+
               document.dispatchEvent(new CustomEvent('cart:update', {
                 bubbles: true,
                 detail: { data: { itemCount: cart.item_count, source: 'cart-recommended-products' } }
               }));
-              
+
               if (typeof CartAddEvent !== 'undefined') {
                 document.dispatchEvent(new CartAddEvent({}, variantId, {
                   source: 'cart-recommended-products',
@@ -195,13 +195,13 @@
                   sections: [],
                 }));
               }
-              
+
               setTimeout(() => {
                 button.querySelector('.cart-recommended-product__add-btn-text').textContent = originalText;
                 button.classList.remove('cart-recommended-product__add-btn--added');
                 button.disabled = false;
               }, 2000);
-              
+
             } catch (error) {
               console.error('Error adding product to cart:', error);
               button.querySelector('.cart-recommended-product__add-btn-text').textContent = 'Error';
@@ -214,36 +214,48 @@
           });
         });
       },
-      
+
       // Initialize all sliders (normal init, skips if already initialized)
       initAll: function() {
         if (typeof Swiper === 'undefined') {
-          setTimeout(() => this.initAll(), 100);
+          if (window.xzLoadSwiper) {
+            window.xzLoadSwiper().then(() => this.initAll()).catch(() => {
+              setTimeout(() => this.initAll(), 100);
+            });
+          } else {
+            setTimeout(() => this.initAll(), 100);
+          }
           return;
         }
         document.querySelectorAll('[data-cart-recommended-slider]').forEach(c => this.initSlider(c, false));
       },
-      
+
       // Reinitialize all sliders (destroys and recreates)
       reinitAll: function() {
         if (typeof Swiper === 'undefined') {
-          setTimeout(() => this.reinitAll(), 100);
+          if (window.xzLoadSwiper) {
+            window.xzLoadSwiper().then(() => this.reinitAll()).catch(() => {
+              setTimeout(() => this.reinitAll(), 100);
+            });
+          } else {
+            setTimeout(() => this.reinitAll(), 100);
+          }
           return;
         }
         document.querySelectorAll('[data-cart-recommended-slider]').forEach(c => this.initSlider(c, true));
       },
-      
+
       // Setup MutationObserver
       setupObserver: function() {
         if (this.observerSetup) return;
         this.observerSetup = true;
-        
+
         const self = this;
-        
+
         const observer = new MutationObserver((mutations) => {
           let shouldInit = false;
           let shouldReinit = false;
-          
+
           for (const mutation of mutations) {
             // Check for added nodes containing sliders
             for (const node of mutation.addedNodes) {
@@ -256,7 +268,7 @@
               }
             }
             if (shouldInit) break;
-            
+
             // Check cart drawer content changes - these require reinit
             if (mutation.type === 'childList' && mutation.target && mutation.target.closest) {
               if (mutation.target.closest('.cart-drawer') || mutation.target.closest('cart-drawer-component') || mutation.target.closest('cart-items-component')) {
@@ -268,7 +280,7 @@
               }
             }
           }
-          
+
           if (shouldReinit) {
             // Content was morphed, need to reinitialize
             requestAnimationFrame(() => self.reinitAll());
@@ -281,9 +293,9 @@
             setTimeout(() => self.initAll(), 150);
           }
         });
-        
+
         observer.observe(document.body, { childList: true, subtree: true });
-        
+
         // Listen for cart:update events - always reinitialize
         document.addEventListener('cart:update', () => {
           // Use reinitAll to properly destroy and recreate Swiper instances
@@ -292,7 +304,7 @@
           setTimeout(() => self.reinitAll(), 300);
         });
       },
-      
+
       // Main init
       init: function() {
         const self = this;
@@ -301,7 +313,7 @@
         } else {
           document.addEventListener('DOMContentLoaded', () => self.setupObserver());
         }
-        
+
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', () => self.initAll());
         } else {
@@ -309,7 +321,7 @@
         }
       }
     };
-    
+
     window.CartRecommendedSlider.init();
   })();
 </script>
@@ -334,7 +346,7 @@
     display: flex;
     justify-content: space-between;
   }
-   
+
   .calculated {
     font-size: 14px !important;
   }
@@ -348,7 +360,7 @@
   }
 
   .cart-total-price span {
-    color: white !important;  
+    color: white !important;
   }
 
   .cart-drawer-total span {
@@ -376,7 +388,7 @@
     height: 45px;
     font-family: "Sen";
   }
-  
+
   .cart-drawer-cart a {
     display: block;
     width: 100%;
@@ -469,7 +481,7 @@
                 ref="closeButton"
                 on:click="cart-drawer-component/close"
                 class="button close-button cart-drawer__close-button button-unstyled"
-                aria-label="{{ 'actions.close_dialog' | t }}" 
+                aria-label="{{ 'actions.close_dialog' | t }}"
                 style="position: static;"
               >
                 <span class="svg-wrapper">
@@ -477,13 +489,13 @@
                 </span>
               </button>
             </div>
-            {%- liquid 
+            {%- liquid
               assign total_price = cart.total_price | divided_by: 100.00
               assign shipping_value = settings.shipping_value
               assign express_value = settings.express_value
               assign enable_express = settings.enable_express_tier | default: true
               assign message2 = ""
-              
+
               # Calculate progress based on current stage
               if total_price < shipping_value
                 # Stage 1: Working toward free shipping
@@ -515,7 +527,7 @@
                 assign progress_value = 100
               endif
             -%}
-            
+
             {% if settings.holiday_mode %}
             <div class="holiday-mode-notice" style="padding: 12px 16px; background-color: #292a33; border: 2px solid #C81E1E; border-radius: 8px; text-align: center; font-family: 'Albert Sans', sans-serif;">
               <p style="margin: 0; color: #ffffff; font-size: 13px; line-height: 1.4;">
@@ -539,7 +551,7 @@
             {% endif %}
             {% endif %}
           </div>
-          
+
           <div
             class="cart-drawer__content motion-reduce"
             aria-label="{{ 'accessibility.cart' | t }}"
@@ -887,7 +899,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     min-height: 0;
-    
+
     /* Firefox scrollbar - Xinzuo style */
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
@@ -988,12 +1000,12 @@
         const text = el.textContent || '';
         const hasEngravingText = text.includes('One Line') && text.includes('$19.00');
         const hasEngravingVariant = el.querySelector('option[value="43781283217459"], option[value="43781283250227"]');
-        
+
         if (hasEngravingText || hasEngravingVariant) {
           // Find the specific upsell item container (not the whole carousel)
           // Walk up to find the item that contains only engraving
           let itemContainer = el;
-          
+
           // Check if this is an individual item (not the whole container)
           // by checking if the text is relatively short (single item) vs the whole widget
           if (text.length < 200 && hasEngravingText) {
@@ -1001,8 +1013,8 @@
             while (itemContainer && !itemContainer.classList?.contains('x1heor9')) {
               itemContainer = itemContainer.parentElement;
             }
-            if (itemContainer && itemContainer.textContent.includes('One Line') && 
-                !itemContainer.textContent.includes('Chef Knife') && 
+            if (itemContainer && itemContainer.textContent.includes('One Line') &&
+                !itemContainer.textContent.includes('Chef Knife') &&
                 !itemContainer.textContent.includes('Santoku')) {
               itemContainer.style.display = 'none';
             }
@@ -1014,7 +1026,7 @@
       document.querySelectorAll('select').forEach(select => {
         const options = select.querySelectorAll('option');
         options.forEach(opt => {
-          if (opt.value === '43781283217459' || opt.value === '43781283250227' || 
+          if (opt.value === '43781283217459' || opt.value === '43781283250227' ||
               opt.textContent.includes('One Line') || opt.textContent.includes('Two Line')) {
             // Find the parent upsell card and hide it
             let card = select.closest('[class*="x1heor9"]') || select.closest('[class*="upsell"]');

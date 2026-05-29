@@ -1,0 +1,58 @@
+{%- comment -%}
+  Lazy-loads Swiper on pages that omit swiper-assets (e.g. collection, static pages).
+  Cart drawer and other deferred consumers call window.xzLoadSwiper().
+{%- endcomment -%}
+<script>
+(function () {
+  if (window.xzLoadSwiper) return;
+
+  var cssUrl = {{ 'swiper-bundle.min.css' | asset_url | json }};
+  var jsUrl = {{ 'swiper-bundle.min.js' | asset_url | json }};
+  var loadPromise;
+
+  window.xzLoadSwiper = function () {
+    if (window.Swiper) {
+      return Promise.resolve(window.Swiper);
+    }
+
+    if (loadPromise) {
+      return loadPromise;
+    }
+
+    loadPromise = new Promise(function (resolve, reject) {
+      if (!document.querySelector('link[data-swiper-css]')) {
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = cssUrl;
+        link.setAttribute('data-swiper-css', '');
+        document.head.appendChild(link);
+      }
+
+      var existingScript = document.querySelector('script[data-swiper-js]');
+      if (existingScript) {
+        if (window.Swiper) {
+          resolve(window.Swiper);
+          return;
+        }
+        existingScript.addEventListener('load', function () {
+          resolve(window.Swiper);
+        });
+        existingScript.addEventListener('error', reject);
+        return;
+      }
+
+      var script = document.createElement('script');
+      script.src = jsUrl;
+      script.defer = true;
+      script.setAttribute('data-swiper-js', '');
+      script.onload = function () {
+        resolve(window.Swiper);
+      };
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+
+    return loadPromise;
+  };
+})();
+</script>

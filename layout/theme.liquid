@@ -13,17 +13,6 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link rel="preconnect" href="https://cdn.shopify.com" crossorigin>
 
-    {% comment %} Performance: Preload LCP product image — eliminates 1,438ms load delay {% endcomment %}
-    {%- if request.path contains '/products/' and product.media.size > 0 -%}
-      <link
-        rel="preload"
-        as="image"
-        href="{{ product.media[0].preview_image | image_url: width: 1200 }}"
-        imagesrcset="{{ product.media[0].preview_image | image_url: width: 352 }} 352w, {{ product.media[0].preview_image | image_url: width: 832 }} 832w, {{ product.media[0].preview_image | image_url: width: 1200 }} 1200w, {{ product.media[0].preview_image | image_url: width: 1920 }} 1920w"
-        imagesizes="(min-width: 750px) calc(100vw - 25rem), 100vw"
-        fetchpriority="high"
-      >
-    {%- endif -%}
     {%- if request.path contains '/collections/' and collection.products.size > 0 -%}
       {%- assign _first_product = collection.products[0] -%}
       {%- if _first_product.featured_media -%}
@@ -84,30 +73,28 @@
     {%- render 'google-fonts' -%}
 
     {%- comment -%}
-      PDP LCP image preload. The Mo Chef PDP trace showed the LCP image (the
-      first product gallery image) wasn't discovered by the parser until ~4s
-      into page load, then took ~30s to download on a Slow 4G profile because
-      it was competing with concurrent images for bandwidth at parse-time.
-      Preloading at the very top of <head> issues the request before the
-      parser even reaches the <img> tag, dedicating bandwidth to the LCP
-      element and getting it on screen materially faster.
-
-      We use imagesrcset + imagesizes so the browser picks the right
-      responsive variant at preload time (no wasted bytes).
+      PDP LCP image preload (single request — do not duplicate).
+      Prefer first gallery media; fall back to featured_image.
     {%- endcomment -%}
-    {%- if template.name == 'product' and product and product.featured_image -%}
+    {%- if template.name == 'product' and product -%}
       {%- liquid
-        assign lcp_img = product.featured_image
-        assign lcp_alt = lcp_img.alt | default: product.title | escape
+        assign lcp_img = nil
+        if product.media.size > 0
+          assign lcp_img = product.media[0].preview_image
+        elsif product.featured_image
+          assign lcp_img = product.featured_image
+        endif
       -%}
-      <link
-        rel="preload"
-        as="image"
-        href="{{ lcp_img | image_url: width: 832 }}"
-        imagesrcset="{{ lcp_img | image_url: width: 240 }} 240w, {{ lcp_img | image_url: width: 352 }} 352w, {{ lcp_img | image_url: width: 832 }} 832w, {{ lcp_img | image_url: width: 1200 }} 1200w"
-        imagesizes="(min-width: 95rem) 65rem, (min-width: 750px) calc(100vw - 25rem - 40px - 24px - 40px), 100vw"
-        fetchpriority="high"
-      >
+      {%- if lcp_img -%}
+        <link
+          rel="preload"
+          as="image"
+          href="{{ lcp_img | image_url: width: 832 }}"
+          imagesrcset="{{ lcp_img | image_url: width: 240 }} 240w, {{ lcp_img | image_url: width: 352 }} 352w, {{ lcp_img | image_url: width: 832 }} 832w, {{ lcp_img | image_url: width: 1200 }} 1200w"
+          imagesizes="(min-width: 95rem) 65rem, (min-width: 750px) calc(100vw - 25rem - 40px - 24px - 40px), 100vw"
+          fetchpriority="high"
+        >
+      {%- endif -%}
     {%- endif -%}
 
     {%- render 'stylesheets' -%}
@@ -126,18 +113,39 @@
 
     {{ content_for_header }}
 
+    {%- liquid
+      assign needs_swiper = false
+
+      if request.design_mode
+        assign needs_swiper = true
+      elsif template.name == 'cart'
+        assign needs_swiper = true
+      elsif template == 'index'
+        assign needs_swiper = true
+      elsif template.name == 'product'
+        assign needs_swiper = true
+      elsif template == 'list-collections'
+        assign needs_swiper = true
+      elsif template.suffix == 'bundles' or template.suffix == 'reviews'
+        assign needs_swiper = true
+      endif
+    -%}
+
+    {%- if needs_swiper -%}
+      {%- render 'swiper-assets' -%}
+    {%- else -%}
+      {%- render 'swiper-loader' -%}
+    {%- endif -%}
+
+    {%- comment -%} Site-wide overrides — non-blocking CSS load {%- endcomment -%}
     <link
       rel="preload"
-      href="{{ 'swiper-bundle.min.css' | asset_url }}"
+      href="{{ 'site-overrides.css' | asset_url }}"
       as="style"
       onload="this.onload=null;this.rel='stylesheet'"
       fetchpriority="low"
     >
-    <noscript><link rel="stylesheet" href="{{ 'swiper-bundle.min.css' | asset_url }}"></noscript>
-    <script src="{{ 'swiper-bundle.min.js' | asset_url }}" defer></script>
-
-    {%- comment -%} Site-wide custom overrides — loaded on every page {%- endcomment -%}
-    <link rel="stylesheet" href="{{ 'site-overrides.css' | asset_url }}">
+    <noscript><link rel="stylesheet" href="{{ 'site-overrides.css' | asset_url }}"></noscript>
 
     {%- comment -%} Judge.me review widget styles — only on pages with reviews {%- endcomment -%}
     {%- liquid
